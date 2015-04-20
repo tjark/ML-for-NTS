@@ -1,3 +1,6 @@
+(* This file originally received from Dmitriy Traytel (TU Muenchen) and
+   slightly extended *)
+
 theory Bounded_Set
 imports
   "~~/src/HOL/Cardinals/Cardinals"
@@ -230,4 +233,3 @@ lemma rel_bset_transp: "transp R \<Longrightarrow> transp (rel_bset R)"
 by (auto simp add: transp_def rel_bset_def rel_set_def) metis+
 
 end
-
