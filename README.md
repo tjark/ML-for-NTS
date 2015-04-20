@@ -5,8 +5,8 @@ systems, as presented in the paper
 
   *Modal Logics for Nominal Transition Systems*
 
-by Joachim Parrow, Johannes Borgström, Lars-Henrik Eriksson, Ramunas
-Gutkovas, and Tjark Weber.
+by Joachim Parrow, Johannes Borgström, Lars-Henrik Eriksson,
+Ram&#363;nas Gutkovas, and Tjark Weber.
 
 These theories are known to work with
 [Isabelle2014](https://isabelle.in.tum.de/)
