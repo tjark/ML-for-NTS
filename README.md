@@ -16,8 +16,8 @@ and the corresponding version of
 Assuming both Isabelle2014 and Nominal2 are installed, the theories
 may be processed as usual: for instance, in batch mode by executing
 
-  `/path/to/Isabelle2014/bin/isabelle build -d /path/to/Nominal/ -D .
+  `/path/to/Isabelle2014/bin/isabelle build -d /path/to/Nominal/ -D .`
 
 or interactively in Isabelle/jEdit by executing, e.g.,
 
-  `/path/to/Isabelle2014/bin/isabelle jedit -d /path/to/Nominal/ -l Nominal2 Equivalence_Implies_Bisimilarity.thy
+  `/path/to/Isabelle2014/bin/isabelle jedit -d /path/to/Nominal/ -l Nominal2 Equivalence_Implies_Bisimilarity.thy`
