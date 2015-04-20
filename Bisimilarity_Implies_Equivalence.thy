@@ -3,7 +3,7 @@ imports
   Logical_Equivalence
 begin
 
-section \<open>Theorem 7: Bisimilarity Implies Logical Equivalence\<close>
+section \<open>Bisimilarity Implies Logical Equivalence\<close>
 
 lemma finite_supp_permute [simp]: "finite (supp (p \<bullet> x)) = finite (supp x)"
 by (metis permute_finite supp_eqvt)

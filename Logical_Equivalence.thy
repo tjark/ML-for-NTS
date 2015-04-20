@@ -3,9 +3,9 @@ imports
   Validity
 begin
 
-section \<open>Definition 6: (Strong) Logical Equivalence\<close>
+section \<open>(Strong) Logical Equivalence\<close>
 
-text \<open>The definition of formulae is parametric in the index type, but from now on we want to work
+text \<open>The definition of formulas is parametric in the index type, but from now on we want to work
 with a fixed (sufficiently large) index type.\<close>
 
 locale indexed_nominal_ts = nominal_ts satisfies transition

@@ -3,7 +3,7 @@ imports
   Logical_Equivalence
 begin
 
-section \<open>Theorem 10: Logical Equivalence Implies Bisimilarity\<close>
+section \<open>Logical Equivalence Implies Bisimilarity\<close>
 
 context indexed_nominal_ts
 begin
@@ -21,7 +21,8 @@ begin
   lemma equivalent_iff_not_distinguished: "(P =\<cdot> Q) \<longleftrightarrow> \<not>(\<exists>x. x distinguishes P from Q)"
   by (metis (full_types) distinguishing_formula_def logically_equivalent_def valid_Not)
 
-  text \<open>Lemma~9.\<close>
+  text \<open>There exists a distinguishing formula for~@{term P} and~@{term Q} whose support is contained
+  in~@{term "supp P"}.\<close>
 
   lemma distinguished_bounded_support:
     assumes "x distinguishes P from Q"

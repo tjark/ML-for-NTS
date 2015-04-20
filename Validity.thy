@@ -4,7 +4,7 @@ imports
   Formula
 begin
 
-section \<open>Definition 4: Validity\<close>
+section \<open>Validity\<close>
 
 text \<open>The following is needed to prove termination of~@{term validTree}.\<close>
 
@@ -85,9 +85,9 @@ subsection \<open>Validity for infinitely branching trees\<close>
 context nominal_ts
 begin
 
-  text \<open>Since we defined formulae via a manual quotient construction, we also need to define
+  text \<open>Since we defined formulas via a manual quotient construction, we also need to define
   validity via lifting from the underlying type of infinitely branching trees. We cannot use
-  {\bf nominal_function} because that generates proof obligations where, for formulae of the
+  {\bf nominal_function} because that generates proof obligations where, for formulas of the
   form~@{term "Conj xset"}, the assumption that~@{term xset} has finite support is missing.\<close>
 
   declare conj_cong [fundef_cong]
@@ -269,7 +269,7 @@ begin
   done
 
 
-  subsection \<open>Validity for infinitary formulae\<close>
+  subsection \<open>Validity for infinitary formulas\<close>
 
   lift_definition valid :: "'state \<Rightarrow> ('idx,'pred,'act) formula \<Rightarrow> bool" (infix "\<Turnstile>" 70) is
     valid_Tree\<^sub>\<alpha>

@@ -5,7 +5,7 @@ imports
   Residual
 begin
 
-section \<open>Definition 3: Infinitary Formulae\<close>
+section \<open>Infinitary Formulas\<close>
 
 subsection \<open>Infinitely branching trees\<close>
 
@@ -748,10 +748,10 @@ variables.\<close>
 
 subsection \<open>Hereditarily finitely supported trees\<close>
 
-text \<open>We cannot obtain the type of infinitary formulae simply as the sub-type of all trees (modulo
+text \<open>We cannot obtain the type of infinitary formulas simply as the sub-type of all trees (modulo
 \<alpha>-equivalence) that are finitely supported: since an infinite set of trees may be finitely supported
-even though its members are not (and thus, would not be formulae), the sub-type of \emph{all}
-finitely supported trees does not validate the induction principle that we desire for formulae.
+even though its members are not (and thus, would not be formulas), the sub-type of \emph{all}
+finitely supported trees does not validate the induction principle that we desire for formulas.
 
 Instead, we define \emph{hereditarily} finitely supported trees. We require that environments and
 state predicates are finitely supported.\<close>
@@ -800,9 +800,9 @@ lemma hereditarily_fs_implies_finite_supp:
 using assms by (induction rule: hereditarily_fs.induct) (simp_all add: finite_supp)
 
 
-subsection \<open>Infinitary formulae\<close>
+subsection \<open>Infinitary formulas\<close>
 
-text \<open>Now, infinitary formulae are simply the sub-type of hereditarily finitely supported trees.\<close>
+text \<open>Now, infinitary formulas are simply the sub-type of hereditarily finitely supported trees.\<close>
 
 typedef ('idx,'pred::fs,'act::bn) formula = "{t\<^sub>\<alpha>::('idx,'pred,'act) Tree\<^sub>\<alpha>. hereditarily_fs t\<^sub>\<alpha>}"
 by (metis hereditarily_fs.Pred\<^sub>\<alpha> mem_Collect_eq)
@@ -835,7 +835,7 @@ begin
 
 end
 
-text \<open>The abstraction and representation functions for formulae are equivariant, and they preserve
+text \<open>The abstraction and representation functions for formulas are equivariant, and they preserve
 support.\<close>
 
 lemma Abs_formula_eqvt [simp]:
@@ -886,15 +886,15 @@ next
     unfolding supp_def by auto
 qed
 
-text \<open>Formulae are in fact finitely supported.\<close>
+text \<open>Formulas are in fact finitely supported.\<close>
 
 instance formula :: (type, fs, bn) fs
 by default (metis Rep_formula' hereditarily_fs_implies_finite_supp supp_Rep_formula)
 
 
-subsection \<open>Constructors for infinitary formulae\<close>
+subsection \<open>Constructors for infinitary formulas\<close>
 
-text \<open>We lift the constructors for trees (modulo \<alpha>-equivalence) to infinitary formulae.
+text \<open>We lift the constructors for trees (modulo \<alpha>-equivalence) to infinitary formulas.
 Since~@{const Conj\<^sub>\<alpha>} does not necessarily yield a (hereditarily) finitely supported tree when
 applied to a (potentially infinite) set of (hereditarily) finitely supported trees, we cannot use
 Isabelle's {\bf lift\_definition} to define~@{term Conj}. Instead, theorems about terms of the
@@ -949,7 +949,7 @@ by transfer simp
 lemma Act_eqvt [eqvt, simp]: "p \<bullet> Act \<alpha> x = Act (p \<bullet> \<alpha>) (p \<bullet> x)"
 by transfer simp
 
-text \<open>The following lemmas describe the support of constructed formulae.\<close>
+text \<open>The following lemmas describe the support of constructed formulas.\<close>
 
 lemma supp_Conj [simp]:
   assumes "finite (supp xset)"
@@ -995,7 +995,7 @@ apply (metis Pred.rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(6))
 done
 
 
-subsection \<open>Induction over infinitary formulae\<close>
+subsection \<open>Induction over infinitary formulas\<close>
 
 lemma formula_induct [case_names Conj Not Pred Act, induct type: formula]:
   fixes x
@@ -1042,7 +1042,7 @@ done
 qed
 
 
-subsection \<open>Strong induction over infinitary formulae\<close>
+subsection \<open>Strong induction over infinitary formulas\<close>
 
 text \<open>The following lemmas are needed to prove strong induction. Nonetheless, they should perhaps be
 moved to earlier sections.\<close>
