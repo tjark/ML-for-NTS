@@ -129,31 +129,23 @@ subsection \<open>Strong induction\<close>
 lemma residual_strong_induct:
   assumes "\<And>(act::'act\<Colon>bn) (state::'state\<Colon>fs) (c::'a\<Colon>fs). bn act \<sharp>* c \<Longrightarrow> P c \<langle>act,state\<rangle>"
   shows "P c residual"
-using assms
-apply (induction residual)
-apply (case_tac y)
-apply (rename_tac r act state)
-apply (subgoal_tac "\<exists>p. (p \<bullet> bn act) \<sharp>* c \<and> supp \<langle>act,state\<rangle> \<sharp>* p")
- prefer 2
- apply (rule at_set_avoiding2)
-    apply (rule bn_finite)
-   apply (rule finite_supp)
-  apply (metis finite_Diff finite_supp supp_abs_residual_pair)
- apply (metis DiffE fresh_def fresh_star_def supp_abs_residual_pair)
-apply auto
-apply (drule_tac x="p \<bullet> act" in meta_spec)
-apply (drule_tac x="c" in meta_spec)
-apply (drule_tac x="p \<bullet> state" in meta_spec)
-apply (simp add: bn_eqvt)
-apply (subgoal_tac "\<langle>p \<bullet> act, p \<bullet> state\<rangle> = \<langle>act, state\<rangle>")
- apply simp
-apply (simp add: residual.abs_eq_iff Abs_eq_iff)
-apply (rule_tac x="-p" in exI)
-apply (simp add: alphas bn_eqvt)
-apply (rule context_conjI)
- apply (metis abs_residual_pair_eqvt supp_abs_residual_pair supp_perm_eq_test)
-apply (metis fresh_minus_perm fresh_star_def supp_abs_residual_pair)
-done
+proof (rule residual.abs_induct, clarify)
+  fix act :: 'act and state :: 'state
+  obtain p where 1: "(p \<bullet> bn act) \<sharp>* c" and 2: "supp \<langle>act,state\<rangle> \<sharp>* p"
+    proof (rule at_set_avoiding2[of "bn act" c "\<langle>act,state\<rangle>", THEN exE])
+      show "finite (bn act)" by (fact bn_finite)
+    next
+      show "finite (supp c)" by (fact finite_supp)
+    next
+      show "finite (supp \<langle>act,state\<rangle>)" by (fact finite_supp_abs_residual_pair)
+    next
+      show "bn act \<sharp>* \<langle>act,state\<rangle>" by (fact bn_abs_residual_fresh)
+    qed metis
+  from 2 have "\<langle>p \<bullet> act, p \<bullet> state\<rangle> = \<langle>act,state\<rangle>"
+    using supp_perm_eq by force
+  then show "P c \<langle>act,state\<rangle>"
+    using assms 1 by (metis bn_eqvt)
+qed
 
 end
 
