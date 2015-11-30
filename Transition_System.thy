@@ -45,31 +45,43 @@ begin
 
   lemma is_bisimulation_eqvt [eqvt]:
     assumes "is_bisimulation R" shows "is_bisimulation (p \<bullet> R)"
-  using assms
-  apply (auto simp add: is_bisimulation_def)
-     apply (metis symp_eqvt)
-    apply (subgoal_tac "R (-p \<bullet> P) (-p \<bullet> Q)")
-     apply (metis permute_minus_cancel(1) satisfies_eqvt)
-    apply (metis (full_types) False_eqvt permute_fun_def)
-  apply (subgoal_tac "R (-p \<bullet> P) (-p \<bullet> Q)")
-   prefer 2
-   apply (metis (full_types) False_eqvt permute_fun_def)
-  apply (thin_tac "\<forall>P Q. R P Q \<longrightarrow> (\<forall>\<phi>. P \<turnstile> \<phi> \<longrightarrow> Q \<turnstile> \<phi>)")
-  apply (drule_tac x="-p \<bullet> P" in spec)
-  apply (drule_tac x="-p \<bullet> Q" in spec)
-  apply simp
-  apply (drule_tac x="-p \<bullet> \<alpha>" in spec)
-  apply (drule mp)
-   apply (metis bn_eqvt fresh_star_permute_iff)
-  apply (drule_tac x="-p \<bullet> P'" in spec)
-  apply (drule mp)
-   apply (metis transition_eqvt')
-  apply auto
-  apply (rule_tac x="p \<bullet> Q'" in exI)
-  apply (rule conjI)
-   apply (metis permute_minus_cancel(1) transition_eqvt')
-  apply (metis eqvt_apply eqvt_lambda permute_boolI unpermute_def)
-  done
+  using assms unfolding is_bisimulation_def
+  proof (clarify)
+    assume 1: "symp R"
+    assume 2: "\<forall>P Q. R P Q \<longrightarrow> (\<forall>\<phi>. P \<turnstile> \<phi> \<longrightarrow> Q \<turnstile> \<phi>)"
+    assume 3: "\<forall>P Q. R P Q \<longrightarrow> (\<forall>\<alpha> P'. bn \<alpha> \<sharp>* Q \<longrightarrow> P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<longrightarrow> (\<exists>Q'. Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> R P' Q'))"
+    have "symp (p \<bullet> R)" (is ?S)
+      using 1 by (simp add: symp_eqvt)
+    moreover have "\<forall>P Q. (p \<bullet> R) P Q \<longrightarrow> (\<forall>\<phi>. P \<turnstile> \<phi> \<longrightarrow> Q \<turnstile> \<phi>)" (is ?T)
+      proof (clarify)
+        fix P Q \<phi>
+        assume *: "(p \<bullet> R) P Q" and **: "P \<turnstile> \<phi>"
+        from * have "R (-p \<bullet> P) (-p \<bullet> Q)"
+          by (simp add: eqvt_lambda permute_bool_def unpermute_def)
+        then show "Q \<turnstile> \<phi>"
+          using 2 ** by (metis permute_minus_cancel(1) satisfies_eqvt)
+      qed
+    moreover have "\<forall>P Q. (p \<bullet> R) P Q \<longrightarrow> (\<forall>\<alpha> P'. bn \<alpha> \<sharp>* Q \<longrightarrow> P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<longrightarrow> (\<exists>Q'. Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> (p \<bullet> R) P' Q'))" (is ?U)
+      proof (clarify)
+        fix P Q \<alpha> P'
+        assume *: "(p \<bullet> R) P Q" and **: "bn \<alpha> \<sharp>* Q" and ***: "P \<rightarrow> \<langle>\<alpha>,P'\<rangle>"
+        from * have "R (-p \<bullet> P) (-p \<bullet> Q)"
+          by (simp add: eqvt_lambda permute_bool_def unpermute_def)
+        moreover have "bn (-p \<bullet> \<alpha>) \<sharp>* (-p \<bullet> Q)"
+          using ** by (metis bn_eqvt fresh_star_permute_iff)
+        moreover have "-p \<bullet> P \<rightarrow> \<langle>-p \<bullet> \<alpha>, -p \<bullet> P'\<rangle>"
+          using *** by (metis transition_eqvt')
+        ultimately obtain Q' where T: "-p \<bullet> Q \<rightarrow> \<langle>-p \<bullet> \<alpha>,Q'\<rangle>" and R: "R (-p \<bullet> P') Q'"
+          using 3 by metis
+        from T have "Q \<rightarrow> \<langle>\<alpha>, p \<bullet> Q'\<rangle>"
+          by (metis permute_minus_cancel(1) transition_eqvt')
+        moreover from R have "(p \<bullet> R) P' (p \<bullet> Q')"
+          by (metis eqvt_apply eqvt_lambda permute_bool_def unpermute_def)
+        ultimately show "\<exists>Q'. Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> (p \<bullet> R) P' Q'"
+          by metis
+      qed
+    ultimately show "?S \<and> ?T \<and> ?U" by simp
+  qed
 
   lemma bisimilar_eqvt [eqvt]:
     assumes "P \<sim>\<cdot> Q" shows "(p \<bullet> P) \<sim>\<cdot> (p \<bullet> Q)"
