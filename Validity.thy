@@ -171,13 +171,13 @@ begin
                     apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
                    apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
                   apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
-                 apply (smt2 Diff_eqvt add_diff_cancel add_diff_eq add_minus_cancel add_perm_eqvt bn_eqvt diff_add_cancel diff_minus_eq_add fresh_star_permute_iff fv_Tree_eqvt minus_add_cancel minus_diff_eq minus_minus minus_perm_def neg_equal_iff_equal permute_perm_def permute_plus)
+                 apply (smt Diff_eqvt add_diff_cancel add_diff_eq add_minus_cancel add_perm_eqvt bn_eqvt diff_add_cancel diff_minus_eq_add fresh_star_permute_iff fv_Tree_eqvt minus_add_cancel minus_diff_eq minus_minus minus_perm_def neg_equal_iff_equal permute_perm_def permute_plus)
                 apply (metis alpha_Tree_eqvt')
                apply (metis bn_eqvt)
               apply (metis bn_eqvt)
              apply (metis (erased, hide_lams) Diff_iff bn_eqvt eqvt_bound mem_permute_iff supp_eqvt unpermute_def)
             apply (metis (no_types, hide_lams) Diff_eqvt Diff_iff bn_eqvt permute_minus_cancel(2) supp_eqvt)
-           apply (smt2 DiffI Diff_eqvt Diff_subset bn_eqvt contra_subsetD minus_minus permute_minus_cancel(1) supp_eqvt)
+           apply (smt DiffI Diff_eqvt Diff_subset bn_eqvt contra_subsetD minus_minus permute_minus_cancel(1) supp_eqvt)
           apply (metis (no_types, hide_lams) DiffE DiffI bn_eqvt eqvt_bound mem_permute_iff supp_eqvt unpermute_def)
          apply (metis (erased, hide_lams) Diff_eqvt bn_eqvt diff_minus_eq_add fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
         apply (metis bn_eqvt)
@@ -258,7 +258,7 @@ begin
    prefer 2
    apply (metis Tree\<^sub>\<alpha>_rep_abs alpha_Tree_valid_Tree)
   apply simp
-  apply (thin_tac "?P")
+  apply (thin_tac _)
   apply auto
    apply (rule_tac x=\<alpha>' in exI)
    apply (rule_tac x="abs_Tree\<^sub>\<alpha> t'" in exI)
@@ -296,7 +296,7 @@ begin
    prefer 2
    apply (metis Act.rep_eq Rep_formula_inverse)
   apply simp
-  apply (thin_tac "?P")
+  apply (thin_tac _)
   apply auto
    apply (rule_tac x=\<alpha>' in exI)
    apply (rule_tac x="Abs_formula t\<^sub>\<alpha>'" in exI)

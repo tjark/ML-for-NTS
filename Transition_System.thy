@@ -106,7 +106,7 @@ begin
 
   apply (rule_tac x="bisimilar OO bisimilar" in exI)
   apply auto
-  apply (thin_tac ?P)+
+  apply (thin_tac _)+
   apply (auto simp add: is_bisimulation_def)
     apply (auto simp add: symp_def)[1]
     apply (metis bisimilar_symp relcompp.simps sympE)
@@ -164,4 +164,3 @@ begin
 end
 
 end
-

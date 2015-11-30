@@ -13,7 +13,7 @@ text \<open>First, we define a type of trees, with a constructor~@{term tConj} t
 infinite) sets of trees into trees. To avoid paradoxes (note that there is no injection from the
 powerset of trees into the set of trees), the cardinality of the argument set must be bounded.\<close>
 
-datatype_new ('idx,'pred,'act) Tree =
+datatype ('idx,'pred,'act) Tree =
     tConj "('idx,'pred,'act) Tree set['idx]"  -- \<open>potentially infinite sets of trees\<close>
   | tNot "('idx,'pred,'act) Tree"
   | tPred 'pred
@@ -359,7 +359,7 @@ apply auto
  apply clarsimp
  apply (rule conjI)
    apply (metis (no_types, hide_lams) Diff_eqvt bn_eqvt)
-  apply (smt2 Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
+  apply (smt Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
 -- \<open> (2) \<close>
 apply (rule_tac x="-p + pa + p" in exI)
 apply (simp add: alpha_set)
@@ -1094,7 +1094,7 @@ apply auto
    apply (clarsimp simp add: Act\<^sub>\<alpha>_eq_iff)
    apply (thin_tac "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) \<approx>set op =\<^sub>\<alpha> fv_Tree p (bn \<alpha>, rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)")
    apply (auto simp add: alphas_abs alphas)[1]
-   apply (smt2 Diff_eqvt Diff_iff bn_eqvt permute_zero supp_eqvt swap_different_sorts swap_set_in)
+   apply (smt Diff_eqvt Diff_iff bn_eqvt permute_zero supp_eqvt swap_different_sorts swap_set_in)
 -- \<open>3 subgoals\<close>
   apply (subgoal_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>}")
    prefer 2
