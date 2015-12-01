@@ -196,19 +196,23 @@ lemma Tree_wf\<^sub>pE:
 using assms by (metis Pair_inject Tree_wf\<^sub>p.abs_eq prod_fun_imageE)
 
 lemma wf_Tree_wf\<^sub>p: "wf Tree_wf\<^sub>p"
-apply (rule wf_subset[of "inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p"])
- apply (metis Tree_wf_eqvt' wf_Tree_wf wf_hull_rel_relcomp wf_inv_image)
-apply (auto elim!: Tree_wf\<^sub>pE)
-apply (rename_tac t1 t2)
-apply (rule_tac t=t1 in permute_rep_abs_Tree\<^sub>p)
-apply (rule_tac t=t2 in permute_rep_abs_Tree\<^sub>p)
-apply (rename_tac p1 p2)
-apply (subgoal_tac "(p2 \<bullet> t1, p2 \<bullet> t2) \<in> Tree_wf")
- apply (subgoal_tac "(p1 \<bullet> t1, p2 \<bullet> t1) \<in> hull_rel")
-  apply (metis relcomp.relcompI)
- apply (metis hull_rel.simps permute_minus_cancel(2) permute_plus)
-apply (metis Tree_wf_eqvt_aux)
-done
+proof (rule wf_subset[of "inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p"])
+  show "wf (inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p)"
+    by (metis Tree_wf_eqvt' wf_Tree_wf wf_hull_rel_relcomp wf_inv_image)
+next
+  show "Tree_wf\<^sub>p \<subseteq> inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p"
+    apply (auto elim!: Tree_wf\<^sub>pE)
+    apply (rename_tac t1 t2)
+    apply (rule_tac t=t1 in permute_rep_abs_Tree\<^sub>p)
+    apply (rule_tac t=t2 in permute_rep_abs_Tree\<^sub>p)
+    apply (rename_tac p1 p2)
+    apply (subgoal_tac "(p2 \<bullet> t1, p2 \<bullet> t2) \<in> Tree_wf")
+     apply (subgoal_tac "(p1 \<bullet> t1, p2 \<bullet> t1) \<in> hull_rel")
+      apply (metis relcomp.relcompI)
+     apply (metis hull_rel.simps permute_minus_cancel(2) permute_plus)
+    apply (metis Tree_wf_eqvt_aux)
+    done
+qed
 
 fun alpha_Tree_termination :: "('a, 'b, 'c) Tree \<times> ('a, 'b, 'c) Tree + ('a, 'b, 'c) Tree \<Rightarrow> ('a, 'b\<Colon>pt, 'c\<Colon>bn) Tree\<^sub>p set \<times> bool" where
   "alpha_Tree_termination (Inl (t1, t2)) = ({abs_Tree\<^sub>p t1, abs_Tree\<^sub>p t2}, False)"
