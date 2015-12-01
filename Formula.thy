@@ -1248,7 +1248,7 @@ done
 qed
 
 lemmas formula_strong_induct = formula_strong_induct_aux[where p=0, simplified]
-declare formula_strong_induct [case_names Conj Not Pred Act Env]
+declare formula_strong_induct [case_names Conj Not Pred Act]
 
 end
 
