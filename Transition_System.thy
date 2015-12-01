@@ -113,57 +113,69 @@ begin
   done
 
   lemma bisimilar_transp: "transp bisimilar"
-  apply (rule transpI)
-  apply (subst bisimilar_def)
-
-  apply (rule_tac x="bisimilar OO bisimilar" in exI)
-  apply auto
-  apply (thin_tac _)+
-  apply (auto simp add: is_bisimulation_def)
-    apply (auto simp add: symp_def)[1]
-    apply (metis bisimilar_symp relcompp.simps sympE)
-   apply (metis bisimilar_def is_bisimulation_def)
-  apply (rename_tac B \<alpha> P')
-
-  -- \<open>rename~@{term "\<langle>\<alpha>,P'\<rangle>"} to avoid~@{term B}, without touching~@{term Q}\<close>
-  apply (subgoal_tac "\<exists>p. (p \<bullet> bn \<alpha>) \<sharp>* B \<and> supp (\<langle>\<alpha>,P'\<rangle>, Q) \<sharp>* p")
-   prefer 2
-   apply (rule at_set_avoiding2)
-      apply (rule bn_finite)
-     apply (rule finite_supp)
-    apply (simp add: supp_abs_residual_pair supp_Pair)
-    apply (metis finite_Diff finite_Un finite_supp)
-   apply (metis bn_abs_residual_fresh fresh_star_Pair)
-  apply (clarsimp simp add: bn_eqvt supp_Pair fresh_star_Un)
-
-  apply (subgoal_tac "\<langle>p \<bullet> \<alpha>, p \<bullet> P'\<rangle> = \<langle>\<alpha>,P'\<rangle>")
-   prefer 2
-   apply (simp add: residual.abs_eq_iff Abs_eq_iff)
-   apply (rule_tac x="-p" in exI)
-   apply (simp add: alphas bn_eqvt)
-   apply (rule context_conjI)
-    apply (metis abs_residual_pair_eqvt supp_abs_residual_pair supp_perm_eq_test)
-   apply (metis fresh_minus_perm fresh_star_def supp_abs_residual_pair)
-
-  apply (subgoal_tac "\<exists>pB'. B \<rightarrow> \<langle>p \<bullet> \<alpha>, pB'\<rangle> \<and> (p \<bullet> P') \<sim>\<cdot> pB'")
-   prefer 2
-   apply (metis (full_types) bisimilar_is_bisimulation is_bisimulation_def)
-  apply clarify
-
-  apply (subgoal_tac "bn (p \<bullet> \<alpha>) \<sharp>* Q")
-   prefer 2
-   apply (metis bn_eqvt fresh_star_permute_iff supp_perm_eq_test)
-
-  apply (subgoal_tac "\<exists>pQ'. Q \<rightarrow> \<langle>p \<bullet> \<alpha>, pQ'\<rangle> \<and> pB' \<sim>\<cdot> pQ'")
-   prefer 2
-   apply (metis (full_types) bisimilar_is_bisimulation is_bisimulation_def)
-  apply clarify
-
-  apply (rule_tac x="-p \<bullet> pQ'" in exI)
-  apply (rule conjI)
-   apply (metis permute_minus_cancel(2) supp_perm_eq_test transition_eqvt')
-  apply (metis (mono_tags) bisimilar_eqvt permute_minus_cancel(2) relcompp.relcompI)
-  done
+  proof (rule transpI)
+    fix P Q R
+    assume PQ: "P \<sim>\<cdot> Q" and QR: "Q \<sim>\<cdot> R"
+    let ?bisim = "bisimilar OO bisimilar"
+    have "symp ?bisim"
+      proof (rule sympI)
+        fix P R
+        assume "?bisim P R"
+        then obtain Q where "P \<sim>\<cdot> Q" and "Q \<sim>\<cdot> R"
+          by blast
+        then have "R \<sim>\<cdot> Q" and "Q \<sim>\<cdot> P"
+          by (metis bisimilar_symp sympE)+
+        then show "?bisim R P"
+          by blast
+      qed
+    moreover have "\<forall>P Q. ?bisim P Q \<longrightarrow> (\<forall>\<phi>. P \<turnstile> \<phi> \<longrightarrow> Q \<turnstile> \<phi>)"
+      using bisimilar_is_bisimulation is_bisimulation_def by auto
+    moreover have "\<forall>P Q. ?bisim P Q \<longrightarrow>
+           (\<forall>\<alpha> P'. bn \<alpha> \<sharp>* Q \<longrightarrow> P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<longrightarrow> (\<exists>Q'. Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> ?bisim P' Q'))"
+      proof (clarify)
+        fix P R Q \<alpha> P'
+        assume PR: "P \<sim>\<cdot> R" and RQ: "R \<sim>\<cdot> Q" and fresh: "bn \<alpha> \<sharp>* Q" and trans: "P \<rightarrow> \<langle>\<alpha>,P'\<rangle>"
+        -- \<open>rename~@{term "\<langle>\<alpha>,P'\<rangle>"} to avoid~@{term R}, without touching~@{term Q}\<close>
+        obtain p where 1: "(p \<bullet> bn \<alpha>) \<sharp>* R" and 2: "supp (\<langle>\<alpha>,P'\<rangle>, Q) \<sharp>* p"
+          proof (rule at_set_avoiding2[of "bn \<alpha>" R "(\<langle>\<alpha>,P'\<rangle>, Q)", THEN exE])
+            show "finite (bn \<alpha>)" by (fact bn_finite)
+          next
+            show "finite (supp R)" by (fact finite_supp)
+          next
+            show "finite (supp (\<langle>\<alpha>,P'\<rangle>, Q))" by (simp add: finite_supp supp_Pair)
+          next
+            show "bn \<alpha> \<sharp>* (\<langle>\<alpha>,P'\<rangle>, Q)" by (simp add: fresh fresh_star_Pair)
+          qed metis
+        from 2 have 3: "supp \<langle>\<alpha>,P'\<rangle> \<sharp>* p" and 4: "supp Q \<sharp>* p"
+          by (simp add: fresh_star_Un supp_Pair)+
+        from 3 have "\<langle>p \<bullet> \<alpha>, p \<bullet> P'\<rangle> = \<langle>\<alpha>,P'\<rangle>"
+          apply (simp add: residual.abs_eq_iff Abs_eq_iff)
+          apply (rule_tac x="-p" in exI)
+          apply (simp add: alphas bn_eqvt)
+          apply (rule context_conjI)
+           apply (metis abs_residual_pair_eqvt supp_abs_residual_pair supp_perm_eq)
+          apply (metis fresh_minus_perm fresh_star_def supp_abs_residual_pair)
+          done
+        then obtain pR' where 5: "R \<rightarrow> \<langle>p \<bullet> \<alpha>, pR'\<rangle>" and 6: "(p \<bullet> P') \<sim>\<cdot> pR'"
+          using PR trans 1 by (metis (mono_tags, lifting) bisimilar_is_bisimulation bn_eqvt is_bisimulation_def)
+        from fresh and 4 have "bn (p \<bullet> \<alpha>) \<sharp>* Q"
+          by (metis bn_eqvt fresh_star_permute_iff supp_perm_eq)
+        then obtain pQ' where 7: "Q \<rightarrow> \<langle>p \<bullet> \<alpha>, pQ'\<rangle>" and 8: "pR' \<sim>\<cdot> pQ'"
+          using RQ 5 by (metis (full_types) bisimilar_is_bisimulation is_bisimulation_def)
+        from 7 have "Q \<rightarrow> \<langle>\<alpha>, -p \<bullet> pQ'\<rangle>"
+          using 4 by (metis permute_minus_cancel(2) supp_perm_eq transition_eqvt')
+        moreover from 6 and 8 have "?bisim P' (-p \<bullet> pQ')"
+          by (metis (no_types, hide_lams) bisimilar_eqvt permute_minus_cancel(2) relcompp.simps)
+        ultimately show "\<exists>Q'. Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> ?bisim P' Q'"
+          by metis
+      qed
+    ultimately have "is_bisimulation ?bisim"
+      unfolding is_bisimulation_def by metis
+    moreover have "?bisim P R"
+      using PQ QR by blast
+    ultimately show "P \<sim>\<cdot> R"
+      unfolding bisimilar_def by metis
+  qed
 
   lemma bisimilar_equivp: "equivp bisimilar"
   by (metis bisimilar_reflp bisimilar_symp bisimilar_transp equivp_reflp_symp_transp)
