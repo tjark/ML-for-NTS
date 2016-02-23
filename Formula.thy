@@ -130,7 +130,7 @@ lemma supp_tAct [simp]: "supp (tAct \<alpha> t) = supp \<alpha> \<union> supp t"
 unfolding supp_def by (simp add: Collect_imp_eq Collect_neg_eq)
 
 
-subsection \<open>Trees modulo \<alpha>-equivalence\<close>
+subsection \<open>Trees modulo \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
 
 text \<open>We generalize the notion of support, which considers whether a permuted element is
 \emph{equal} to itself, to arbitrary endorelations.\<close>
@@ -142,12 +142,12 @@ lemma Supp_eqvt [eqvt]:
   "p \<bullet> Supp R x = Supp (p \<bullet> R) (p \<bullet> x)"
 by (simp add: Supp_def)
 
-text \<open>Usually, the definition of \<alpha>-equivalence presupposes a notion of free variables. Here, to
-obtain the correct notion of free variables for infinitary conjunctions, we define \<alpha>-equivalence and
+text \<open>Usually, the definition of $\alpha$-equivalence presupposes a notion of free variables. Here, to
+obtain the correct notion of free variables for infinitary conjunctions, we define $\alpha$-equivalence and
 free variables via mutual recursion.
 
 I conjecture that the concept of ``free variables'' is not needed at all: we could directly use the
-support modulo \<alpha>-equivalence instead. Working out the details (which might simplify the mutually
+support modulo $\alpha$-equivalence instead. Working out the details (which might simplify the mutually
 recursive definition below) is left for another time.\<close>
 
 text \<open>The following lemmas and constructions are used to prove termination of our mutually recursive
@@ -232,7 +232,7 @@ function (sequential)
     (\<exists>p. (bn \<alpha>1, t1) \<approx>set alpha_Tree fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op=) supp p (bn \<alpha>2, \<alpha>2))"
 | alpha_other: "_ =\<^sub>\<alpha> _ \<longleftrightarrow> False"
 -- \<open>@{const fv_Tree}\<close>
--- \<open>the free variables in a conjunction are the support of its \<alpha>-equivalence class\<close>
+-- \<open>the free variables in a conjunction are the support of its $\alpha$-equivalence class\<close>
 | fv_tConj: "fv_Tree (tConj tset) = Supp alpha_Tree (tConj tset)"
 | fv_tNot: "fv_Tree (tNot t) = fv_Tree t"
 | fv_tPred: "fv_Tree (tPred \<phi>) = supp \<phi>"
@@ -281,7 +281,7 @@ termination proof
 qed
 
 text \<open>We provide more descriptive case names for the automatically generated induction principle,
-and specialize it to an induction rule for \<alpha>-equivalence.\<close>
+and specialize it to an induction rule for $\alpha$-equivalence.\<close>
 
 lemmas alpha_Tree_fv_Tree_induct = alpha_Tree_fv_Tree.induct[case_names alpha_tConj alpha_tNot
   alpha_tPred alpha_tAct "alpha_other(1)" "alpha_other(2)" "alpha_other(3)" "alpha_other(4)"
@@ -302,7 +302,7 @@ lemma alpha_Tree_induct[case_names tConj tNot tPred tAct, consumes 1]:
   shows "P t1 t2"
 using assms by (induction t1 t2 rule: alpha_Tree_fv_Tree_induct(1)[where Q="\<lambda>x. True"]) simp_all
 
-text \<open>\<alpha>-equivalence and the free-variables function are equivariant.\<close>
+text \<open>$\alpha$-equivalence and the free-variables function are equivariant.\<close>
 
 lemma
   fixes t1 t2 t :: "('a,'b::pt,'c::bn) Tree"
@@ -481,7 +481,7 @@ qed
 lemma alpha_Tree_equivp: "equivp alpha_Tree"
 by (auto intro: equivpI alpha_Tree_reflp alpha_Tree_symp alpha_Tree_transp)
 
-text \<open>\<alpha>-equivalent trees have the same set of free variables.\<close>
+text \<open>$alpha$-equivalent trees have the same set of free variables.\<close>
 
 lemma alpha_Tree_fv_Tree:
   assumes "t1 =\<^sub>\<alpha> t2"
@@ -512,7 +512,7 @@ next
    by (clarsimp simp add: alphas alphas_abs) (metis Un_Diff)
 qed simp_all
 
-text \<open>@{const tAct} preserves \<alpha>-equivalence.\<close>
+text \<open>@{const tAct} preserves $\alpha$-equivalence.\<close>
 
 lemma alpha_Tree_tAct:
   assumes "t1 =\<^sub>\<alpha> t2"
@@ -526,7 +526,7 @@ proof (simp)
     by auto
 qed
 
-text \<open>We define the type of (infinitely branching) trees quotiented by \<alpha>-equivalence.\<close>
+text \<open>We define the type of (infinitely branching) trees quotiented by $\alpha$-equivalence.\<close>
 
 (* FIXME: No map function defined. No relator found. *)
 quotient_type
@@ -561,8 +561,8 @@ begin
 
 end
 
-text \<open>The abstraction function from trees to trees modulo \<alpha>-equivalence is equivariant. The
-representation function is equivariant modulo \<alpha>-equivalence.\<close>
+text \<open>The abstraction function from trees to trees modulo $\alpha$-equivalence is equivariant. The
+representation function is equivariant modulo $\alpha$-equivalence.\<close>
 
 lemmas permute_Tree\<^sub>\<alpha>.abs_eq [eqvt, simp]
 
@@ -570,7 +570,7 @@ lemma alpha_Tree_permute_rep_commute [simp]: "p \<bullet> rep_Tree\<^sub>\<alpha
 by (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq)
 
 
-subsection \<open>Constructors for trees modulo \<alpha>-equivalence\<close>
+subsection \<open>Constructors for trees modulo \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
 
 text \<open>The constructors are lifted from trees.\<close>
 
@@ -688,7 +688,7 @@ apply auto
 apply (metis Act\<^sub>\<alpha>.abs_eq Pred\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree.simps(10))
 done
 
-text \<open>The following lemmas describe the support of constructed trees modulo \<alpha>-equivalence.
+text \<open>The following lemmas describe the support of constructed trees modulo $\alpha$-equivalence.
 For~@{term "Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"}, we merely prove that it is finitely supported, provided~@{term t\<^sub>\<alpha>} has
 finite support.\<close>
 
@@ -712,7 +712,7 @@ proof -
 qed
 
 
-subsection \<open>Induction over trees modulo \<alpha>-equivalence\<close>
+subsection \<open>Induction over trees modulo \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
 
 lemma Tree\<^sub>\<alpha>_induct [case_names Conj\<^sub>\<alpha> Not\<^sub>\<alpha> Pred\<^sub>\<alpha> Act\<^sub>\<alpha> Env\<^sub>\<alpha>, induct type: Tree\<^sub>\<alpha>]:
   fixes t\<^sub>\<alpha>
@@ -745,17 +745,18 @@ done
     qed
 qed
 
-text \<open>There is no (obvious) strong induction principle for trees modulo \<alpha>-equivalence: since their
-support may be infinite, we may not be able to rename bound variables without also renaming free
-variables.\<close>
+text \<open>There is no (obvious) strong induction principle for trees modulo $\alpha$-equivalence: since
+their support may be infinite, we may not be able to rename bound variables without also renaming
+free variables.\<close>
 
 
 subsection \<open>Hereditarily finitely supported trees\<close>
 
 text \<open>We cannot obtain the type of infinitary formulas simply as the sub-type of all trees (modulo
-\<alpha>-equivalence) that are finitely supported: since an infinite set of trees may be finitely supported
-even though its members are not (and thus, would not be formulas), the sub-type of \emph{all}
-finitely supported trees does not validate the induction principle that we desire for formulas.
+$\alpha$-equivalence) that are finitely supported: since an infinite set of trees may be finitely
+supported even though its members are not (and thus, would not be formulas), the sub-type of
+\emph{all} finitely supported trees does not validate the induction principle that we desire for
+formulas.
 
 Instead, we define \emph{hereditarily} finitely supported trees. We require that environments and
 state predicates are finitely supported.\<close>
@@ -785,7 +786,7 @@ next
     by (metis Act\<^sub>\<alpha>_eqvt hereditarily_fs.Act\<^sub>\<alpha>)
 qed
 
-text \<open>@{const hereditarily_fs} is preserved under \<alpha>-renaming.\<close>
+text \<open>@{const hereditarily_fs} is preserved under $\alpha$-renaming.\<close>
 
 lemma hereditarily_fs_alpha_renaming:
   assumes "Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha>' t\<^sub>\<alpha>'"
@@ -812,7 +813,7 @@ typedef ('idx,'pred::fs,'act::bn) formula = "{t\<^sub>\<alpha>::('idx,'pred,'act
 by (metis hereditarily_fs.Pred\<^sub>\<alpha> mem_Collect_eq)
 
 text \<open>We set up Isabelle's lifting infrastructure so that we can lift definitions from the type of
-trees modulo \<alpha>-equivalence to the sub-type of formulas.\<close>
+trees modulo $\alpha$-equivalence to the sub-type of formulas.\<close>
 
 (* FIXME: No relator found. *)
 setup_lifting type_definition_formula
@@ -898,7 +899,7 @@ by default (metis Rep_formula' hereditarily_fs_implies_finite_supp supp_Rep_form
 
 subsection \<open>Constructors for infinitary formulas\<close>
 
-text \<open>We lift the constructors for trees (modulo \<alpha>-equivalence) to infinitary formulas.
+text \<open>We lift the constructors for trees (modulo $\alpha$-equivalence) to infinitary formulas.
 Since~@{const Conj\<^sub>\<alpha>} does not necessarily yield a (hereditarily) finitely supported tree when
 applied to a (potentially infinite) set of (hereditarily) finitely supported trees, we cannot use
 Isabelle's {\bf lift\_definition} to define~@{term Conj}. Instead, theorems about terms of the

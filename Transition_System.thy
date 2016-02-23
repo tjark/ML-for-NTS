@@ -12,7 +12,7 @@ using assms unfolding symp_def by (subst permute_fun_def)+ (simp add: permute_pu
 
 section \<open>Nominal Transition Systems and Bisimulations\<close>
 
-subsection \<open>Definition 1: Nominal transition systems\<close>
+subsection \<open>Nominal transition systems\<close>
 
 locale nominal_ts =
   fixes satisfies :: "'state\<Colon>fs \<Rightarrow> 'pred\<Colon>fs \<Rightarrow> bool"                 (infix "\<turnstile>" 70)
@@ -27,7 +27,7 @@ begin
 
 end
  
-subsection \<open>Definition 2: Bisimulations\<close>
+subsection \<open>Bisimulations\<close>
  
 context nominal_ts
 begin

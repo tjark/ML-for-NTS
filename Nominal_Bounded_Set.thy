@@ -4,7 +4,7 @@ imports
   Bounded_Set
 begin
 
-section \<open>Bounded sets equipped with a permutation action\<close>
+section \<open>Bounded Sets Equipped With a Permutation Action\<close>
 
 text \<open>Bounded sets are equipped with a permutation action, provided their elements are.\<close>
 

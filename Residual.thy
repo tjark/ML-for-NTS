@@ -7,7 +7,7 @@ section \<open>Residuals\<close>
 
 subsection \<open>Binding names\<close>
 
-text \<open>To define \<alpha>-equivalence, we require actions to be equipped with an equivariant
+text \<open>To define $\alpha$-equivalence, we require actions to be equipped with an equivariant
 function~@{term bn} that gives their binding names. Actions may only bind finitely many names. This
 is necessary to ensure that we can use a finite permutation to rename the binding names in an
 action.\<close>
@@ -21,7 +21,7 @@ lemma bn_subset_supp: "bn \<alpha> \<subseteq> supp \<alpha>"
 by (metis (erased, hide_lams) bn_eqvt bn_finite eqvt_at_def finite_supp supp_eqvt_at supp_finite_atom_set)
 
 
-subsection \<open>Raw residuals and \<alpha>-equivalence\<close>
+subsection \<open>Raw residuals and \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
 
 text \<open>Raw residuals are simply pairs of actions and states. Binding names in the action bind into
 (the action and) the state.\<close>
@@ -29,14 +29,14 @@ text \<open>Raw residuals are simply pairs of actions and states. Binding names 
 fun alpha_residual :: "('act\<Colon>bn \<times> 'state\<Colon>pt) \<Rightarrow> ('act \<times> 'state) \<Rightarrow> bool" where
   "alpha_residual (\<alpha>1,P1) (\<alpha>2,P2) \<longleftrightarrow> [bn \<alpha>1]set. (\<alpha>1, P1) = [bn \<alpha>2]set. (\<alpha>2, P2)"
 
-text \<open>\<alpha>-equivalence is equivariant.\<close>
+text \<open>$\alpha$-equivalence is equivariant.\<close>
 
 lemma alpha_residual_eqvt [eqvt]:
   assumes "alpha_residual r1 r2"
   shows "alpha_residual (p \<bullet> r1) (p \<bullet> r2)"
 using assms by (cases r1, cases r2) (simp, metis Pair_eqvt bn_eqvt permute_Abs_set)
 
-text \<open>\<alpha>-equivalence is an equivalence relation.\<close>
+text \<open>$\alpha$-equivalence is an equivalence relation.\<close>
 
 lemma alpha_residual_reflp: "reflp alpha_residual"
 by (metis alpha_residual.simps prod.exhaust reflpI)
@@ -53,7 +53,7 @@ by (metis alpha_residual_reflp alpha_residual_symp alpha_residual_transp equivpI
 
 subsection \<open>Residuals\<close>
 
-text \<open>Residuals are raw residuals quotiented by \<alpha>-equivalence.\<close>
+text \<open>Residuals are raw residuals quotiented by $\alpha$-equivalence.\<close>
 
 quotient_type
   ('act,'state) residual = "'act\<Colon>bn \<times> 'state\<Colon>pt" / "alpha_residual"
@@ -88,7 +88,7 @@ begin
 end
 
 text \<open>The abstraction function from raw residuals to residuals is equivariant. The representation
-function is equivariant modulo \<alpha>-equivalence.\<close>
+function is equivariant modulo $\alpha$-equivalence.\<close>
 
 lemmas permute_residual.abs_eq [eqvt, simp]
 

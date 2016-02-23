@@ -87,7 +87,7 @@ begin
 
   text \<open>Since we defined formulas via a manual quotient construction, we also need to define
   validity via lifting from the underlying type of infinitely branching trees. We cannot use
-  {\bf nominal_function} because that generates proof obligations where, for formulas of the
+  {\bf nominal\_function} because that generates proof obligations where, for formulas of the
   form~@{term "Conj xset"}, the assumption that~@{term xset} has finite support is missing.\<close>
 
   declare conj_cong [fundef_cong]
@@ -190,7 +190,7 @@ begin
     assumes "valid_Tree P t" shows "valid_Tree (p \<bullet> P) (p \<bullet> t)"
   using assms by (metis valid_Tree_eqvt')
 
-  text \<open>\<alpha>-equivalent trees validate the same states.\<close>
+  text \<open>$\alpha$-equivalent trees validate the same states.\<close>
 
   lemma alpha_Tree_valid_Tree:
     assumes "t1 =\<^sub>\<alpha> t2"
@@ -229,7 +229,7 @@ begin
   qed simp_all
 
 
-  subsection \<open>Validity for trees modulo \<alpha>-equivalence\<close>
+  subsection \<open>Validity for trees modulo \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
 
   lift_definition valid_Tree\<^sub>\<alpha> :: "'state \<Rightarrow> ('idx,'pred,'act) Tree\<^sub>\<alpha> \<Rightarrow> bool" is
     valid_Tree
