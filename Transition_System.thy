@@ -10,7 +10,6 @@ subsection \<open>Basic Lemmas\<close>
 lemma symp_eqvt [eqvt]:
   assumes "symp R" shows "symp (p \<bullet> R)"
 using assms unfolding symp_def by (subst permute_fun_def)+ (simp add: permute_pure)
-
 subsection \<open>Nominal transition systems\<close>
 
 locale nominal_ts =
@@ -148,13 +147,7 @@ begin
         from 2 have 3: "supp \<langle>\<alpha>,P'\<rangle> \<sharp>* p" and 4: "supp Q \<sharp>* p"
           by (simp add: fresh_star_Un supp_Pair)+
         from 3 have "\<langle>p \<bullet> \<alpha>, p \<bullet> P'\<rangle> = \<langle>\<alpha>,P'\<rangle>"
-          apply (simp add: residual.abs_eq_iff Abs_eq_iff)
-          apply (rule_tac x="-p" in exI)
-          apply (simp add: alphas bn_eqvt)
-          apply (rule context_conjI)
-           apply (metis abs_residual_pair_eqvt supp_abs_residual_pair supp_perm_eq)
-          apply (metis fresh_minus_perm fresh_star_def supp_abs_residual_pair)
-          done
+          using supp_perm_eq by fastforce
         then obtain pR' where 5: "R \<rightarrow> \<langle>p \<bullet> \<alpha>, pR'\<rangle>" and 6: "(p \<bullet> P') \<sim>\<cdot> pR'"
           using PR trans 1 by (metis (mono_tags, lifting) bisimilar_is_bisimulation bn_eqvt is_bisimulation_def)
         from fresh and 4 have "bn (p \<bullet> \<alpha>) \<sharp>* Q"
