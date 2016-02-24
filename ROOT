@@ -13,4 +13,5 @@ session "ML-for-NTS" = Nominal2 +
     "Bisimilarity_Implies_Equivalence"
     "Equivalence_Implies_Bisimilarity"
   document_files
+    "root.bib"
     "root.tex"
