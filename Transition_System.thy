@@ -3,14 +3,13 @@ imports
   Residual
 begin
 
-section \<open>Basic Lemmas\<close>
+section \<open>Nominal Transition Systems and Bisimulations\<close>
+
+subsection \<open>Basic Lemmas\<close>
 
 lemma symp_eqvt [eqvt]:
   assumes "symp R" shows "symp (p \<bullet> R)"
 using assms unfolding symp_def by (subst permute_fun_def)+ (simp add: permute_pure)
-
-
-section \<open>Nominal Transition Systems and Bisimulations\<close>
 
 subsection \<open>Nominal transition systems\<close>
 
