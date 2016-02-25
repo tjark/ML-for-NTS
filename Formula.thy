@@ -201,17 +201,22 @@ proof (rule wf_subset[of "inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p"])
     by (metis Tree_wf_eqvt' wf_Tree_wf wf_hull_rel_relcomp wf_inv_image)
 next
   show "Tree_wf\<^sub>p \<subseteq> inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p"
-    apply (auto elim!: Tree_wf\<^sub>pE)
-    apply (rename_tac t1 t2)
-    apply (rule_tac t=t1 in permute_rep_abs_Tree\<^sub>p)
-    apply (rule_tac t=t2 in permute_rep_abs_Tree\<^sub>p)
-    apply (rename_tac p1 p2)
-    apply (subgoal_tac "(p2 \<bullet> t1, p2 \<bullet> t2) \<in> Tree_wf")
-     apply (subgoal_tac "(p1 \<bullet> t1, p2 \<bullet> t1) \<in> hull_rel")
-      apply (metis relcomp.relcompI)
-     apply (metis hull_rel.simps permute_minus_cancel(2) permute_plus)
-    apply (metis Tree_wf_eqvt_aux)
-    done
+  proof (default, case_tac "x", clarify)
+    fix a\<^sub>p b\<^sub>p :: "('d, 'e, 'f) Tree\<^sub>p"
+    assume "(a\<^sub>p, b\<^sub>p) \<in> Tree_wf\<^sub>p"
+    then obtain a b where 1: "a\<^sub>p = abs_Tree\<^sub>p a" and 2: "b\<^sub>p = abs_Tree\<^sub>p b" and 3: "(a,b) \<in> Tree_wf"
+      by (rule Tree_wf\<^sub>pE)
+    from 1 obtain p where 4: "rep_Tree\<^sub>p a\<^sub>p = p \<bullet> a"
+      by (metis permute_rep_abs_Tree\<^sub>p)
+    from 2 obtain q where 5: "rep_Tree\<^sub>p b\<^sub>p = q \<bullet> b"
+      by (metis permute_rep_abs_Tree\<^sub>p)
+    have "(p \<bullet> a, q \<bullet> a) \<in> hull_rel"
+      by (metis hull_rel.simps permute_minus_cancel(2) permute_plus)
+    moreover from 3 have "(q \<bullet> a, q \<bullet> b) \<in> Tree_wf"
+      by (rule Tree_wf_eqvt_aux)
+    ultimately show "(a\<^sub>p, b\<^sub>p) \<in> inv_image (hull_rel O Tree_wf) rep_Tree\<^sub>p"
+      using 4 5 by auto
+  qed
 qed
 
 fun alpha_Tree_termination :: "('a, 'b, 'c) Tree \<times> ('a, 'b, 'c) Tree + ('a, 'b, 'c) Tree \<Rightarrow> ('a, 'b\<Colon>pt, 'c\<Colon>bn) Tree\<^sub>p set \<times> bool" where
