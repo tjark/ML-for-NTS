@@ -241,44 +241,9 @@ function (sequential)
 by pat_completeness auto
 termination proof
   let ?R = "inv_image (max_ext Tree_wf\<^sub>p <*lex*> less_bool_rel) alpha_Tree_termination"
-  {
-    show "wf ?R"
-      by (metis max_ext_wf wf_Tree_wf\<^sub>p wf_inv_image wf_less_bool_rel wf_lex_prod)
-  next
-    fix t1 t2 and tset1 tset2 :: "('a, 'b, 'c) Tree set['a]"
-    assume "t1 \<in> set_bset tset1" and "t2 \<in> set_bset tset2"
-    then show "(Inl (t1, t2), Inl (tConj tset1, tConj tset2)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  next
-    fix t1 t2 :: "('a, 'b, 'c) Tree"
-    show "(Inl (t1, t2), Inl (tNot t1, tNot t2)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  next
-    fix \<alpha>1 \<alpha>2 :: 'c and t1 t2 :: "('a, 'b, 'c) Tree" and p
-    show "(Inl (p \<bullet> t1, t2), Inl (tAct \<alpha>1 t1, tAct \<alpha>2 t2)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  next
-    fix \<alpha>1 \<alpha>2 :: 'c and t1 t2 :: "('a, 'b, 'c) Tree"
-    show "(Inr t1, Inl (tAct \<alpha>1 t1, tAct \<alpha>2 t2)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  next
-    fix \<alpha>1 \<alpha>2 :: 'c and t1 t2 :: "('a, 'b, 'c) Tree"
-    show "(Inr t2, Inl (tAct \<alpha>1 t1, tAct \<alpha>2 t2)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  next
-    fix tset :: "('a, 'b, 'c) Tree set['a]" and a b
-    show "(Inl ((a \<rightleftharpoons> b) \<bullet> tConj tset, tConj tset), Inr (tConj tset)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps simp del: permute_Tree_tConj)
-  next
-    fix t :: "('a, 'b, 'c) Tree"
-    show "(Inr t, Inr (tNot t)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  next
-    fix \<alpha> :: 'c and t :: "('a, 'b, 'c) Tree"
-    show "(Inr t, Inr (tAct \<alpha> t)) \<in> ?R"
-      by (auto simp add: max_ext.simps Tree_wf.simps)
-  }
-qed
+  show "wf ?R"
+    by (metis max_ext_wf wf_Tree_wf\<^sub>p wf_inv_image wf_less_bool_rel wf_lex_prod)
+qed (auto simp add: max_ext.simps Tree_wf.simps simp del: permute_Tree_tConj)
 
 text \<open>We provide more descriptive case names for the automatically generated induction principle,
 and specialize it to an induction rule for $\alpha$-equivalence.\<close>
