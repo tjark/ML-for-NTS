@@ -142,7 +142,7 @@ proof (rule residual.abs_induct, clarify)
       show "bn act \<sharp>* \<langle>act,state\<rangle>" by (fact bn_abs_residual_fresh)
     qed metis
   from 2 have "\<langle>p \<bullet> act, p \<bullet> state\<rangle> = \<langle>act,state\<rangle>"
-    using supp_perm_eq by force
+    using supp_perm_eq by fastforce
   then show "P c \<langle>act,state\<rangle>"
     using assms 1 by (metis bn_eqvt)
 qed
