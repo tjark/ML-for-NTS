@@ -30,17 +30,38 @@ begin
   proof -
     let ?B = "{p \<bullet> x|p. supp P \<sharp>* p}"
     have "supp P supports ?B"
-      apply (auto simp add: supports_def)
-       apply (rename_tac p)
-       apply (rule_tac x="p + (a \<rightleftharpoons> b)" in exI)
-       apply (rule conjI)
-        apply (metis permute_plus)
-       apply (metis fresh_perm fresh_star_def fresh_star_plus supp_eqvt swap_atom_simps(3) swap_set_not_in)
-      apply (rule_tac x="p + (a \<rightleftharpoons> b)" in exI)
-      apply (rule conjI)
-       apply (metis permute_plus permute_swap_cancel)
-      apply (metis fresh_perm fresh_star_def fresh_star_plus supp_eqvt swap_atom_simps(3) swap_set_not_in)
-      done
+    unfolding supports_def proof (clarify)
+      fix a b
+      assume a: "a \<notin> supp P" and b: "b \<notin> supp P"
+      have "(a \<rightleftharpoons> b) \<bullet> ?B \<subseteq> ?B"
+      proof
+        fix x'
+        assume "x' \<in> (a \<rightleftharpoons> b) \<bullet> ?B"
+        then obtain p where 1: "x' = (a \<rightleftharpoons> b) \<bullet> p \<bullet> x" and 2: "supp P \<sharp>* p"
+          by (auto simp add: permute_set_def)
+        let ?q = "(a \<rightleftharpoons> b) + p"
+        from 1 have "x' = ?q \<bullet> x"
+          by simp
+        moreover from a and b and 2 have "supp P \<sharp>* ?q"
+          by (metis fresh_perm fresh_star_def fresh_star_plus swap_atom_simps(3))
+        ultimately show "x' \<in> ?B" by blast
+      qed
+      moreover have "?B \<subseteq> (a \<rightleftharpoons> b) \<bullet> ?B"
+      proof
+        fix x'
+        assume "x' \<in> ?B"
+        then obtain p where 1: "x' = p \<bullet> x" and 2: "supp P \<sharp>* p"
+          by auto
+        let ?q = "(a \<rightleftharpoons> b) + p"
+        from 1 have "x' = (a \<rightleftharpoons> b) \<bullet> ?q \<bullet> x"
+          by simp
+        moreover from a and b and 2 have "supp P \<sharp>* ?q"
+          by (metis fresh_perm fresh_star_def fresh_star_plus swap_atom_simps(3))
+        ultimately show "x' \<in> (a \<rightleftharpoons> b) \<bullet> ?B"
+          using mem_permute_iff by blast
+      qed
+      ultimately show "(a \<rightleftharpoons> b) \<bullet> ?B = ?B" ..
+    qed
     then have supp_B_subset_supp_P: "supp ?B \<subseteq> supp P"
       by (metis (erased, lifting) finite_supp supp_is_subset)
     then have finite_supp_B: "finite (supp ?B)"
