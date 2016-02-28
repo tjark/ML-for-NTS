@@ -268,11 +268,12 @@ begin
   using assms by transfer (fact valid_Tree_eqvt)
 
   lemma valid_Tree\<^sub>\<alpha>_Conj\<^sub>\<alpha> [simp]: "valid_Tree\<^sub>\<alpha> P (Conj\<^sub>\<alpha> tset\<^sub>\<alpha>) \<longleftrightarrow> (\<forall>t\<^sub>\<alpha>\<in>set_bset tset\<^sub>\<alpha>. valid_Tree\<^sub>\<alpha> P t\<^sub>\<alpha>)"
-  apply (simp add: valid_Tree\<^sub>\<alpha>_def Conj\<^sub>\<alpha>_def)
-  apply (subgoal_tac "valid_Tree P (rep_Tree\<^sub>\<alpha> (abs_Tree\<^sub>\<alpha> (tConj (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>)))) \<longleftrightarrow> valid_Tree P (tConj (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>))")
-   apply (simp add: map_bset.rep_eq)
-  apply (metis Tree\<^sub>\<alpha>_rep_abs alpha_Tree_valid_Tree)
-  done
+  proof -
+    have "valid_Tree P (rep_Tree\<^sub>\<alpha> (abs_Tree\<^sub>\<alpha> (tConj (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>)))) \<longleftrightarrow> valid_Tree P (tConj (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>))"
+      by (metis Tree\<^sub>\<alpha>_rep_abs alpha_Tree_valid_Tree)
+    then show ?thesis
+      by (simp add: valid_Tree\<^sub>\<alpha>_def Conj\<^sub>\<alpha>_def map_bset.rep_eq)
+  qed
 
   lemma valid_Tree\<^sub>\<alpha>_Not\<^sub>\<alpha> [simp]: "valid_Tree\<^sub>\<alpha> P (Not\<^sub>\<alpha> t\<^sub>\<alpha>) \<longleftrightarrow> \<not> valid_Tree\<^sub>\<alpha> P t\<^sub>\<alpha>"
   by transfer simp
@@ -281,20 +282,19 @@ begin
   by transfer simp
 
   lemma valid_Tree\<^sub>\<alpha>_Act\<^sub>\<alpha> [simp]: "valid_Tree\<^sub>\<alpha> P (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) \<longleftrightarrow> (\<exists>\<alpha>' t\<^sub>\<alpha>' P'. Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha>' t\<^sub>\<alpha>' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree\<^sub>\<alpha> P' t\<^sub>\<alpha>')"
-  apply (simp add: valid_Tree\<^sub>\<alpha>_def Act\<^sub>\<alpha>_def)
-  apply (subgoal_tac "valid_Tree P (rep_Tree\<^sub>\<alpha> (abs_Tree\<^sub>\<alpha> (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)))) \<longleftrightarrow> valid_Tree P (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>))")
-   prefer 2
-   apply (metis Tree\<^sub>\<alpha>_rep_abs alpha_Tree_valid_Tree)
-  apply simp
-  apply (thin_tac _)
-  apply auto
-   apply (rule_tac x=\<alpha>' in exI)
-   apply (rule_tac x="abs_Tree\<^sub>\<alpha> t'" in exI)
-   apply (metis Act\<^sub>\<alpha>.abs_eq Formula.alpha_tAct Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_rep_abs alpha_Tree_valid_Tree)
-  apply (rule_tac x=\<alpha>' in exI)
-  apply (rule_tac x="rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>'" in exI)
-  apply (metis Formula.alpha_tAct Tree\<^sub>\<alpha>.abs_eq_iff)
-  done
+  proof
+    assume "valid_Tree\<^sub>\<alpha> P (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+    moreover have "Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = abs_Tree\<^sub>\<alpha> (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>))"
+      by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>_abs_rep)
+    ultimately show "\<exists>\<alpha>' t\<^sub>\<alpha>' P'. Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha>' t\<^sub>\<alpha>' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree\<^sub>\<alpha> P' t\<^sub>\<alpha>'"
+      by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff valid_Tree.simps(4) valid_Tree\<^sub>\<alpha>.abs_eq)
+  next
+    assume "\<exists>\<alpha>' t\<^sub>\<alpha>' P'. Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha>' t\<^sub>\<alpha>' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree\<^sub>\<alpha> P' t\<^sub>\<alpha>'"
+    moreover have "\<And>\<alpha>' t\<^sub>\<alpha>'. Act\<^sub>\<alpha> \<alpha>' t\<^sub>\<alpha>' = abs_Tree\<^sub>\<alpha> (tAct \<alpha>' (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>'))"
+      by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>_abs_rep)
+    ultimately show "valid_Tree\<^sub>\<alpha> P (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+      by (metis Tree\<^sub>\<alpha>.abs_eq_iff valid_Tree.simps(4) valid_Tree\<^sub>\<alpha>.abs_eq valid_Tree\<^sub>\<alpha>.rep_eq)
+  qed
 
 
   subsection \<open>Validity for infinitary formulas\<close>
