@@ -240,33 +240,24 @@ begin
     case tConj then show ?case
       by auto (metis (mono_tags) rel_bset.rep_eq rel_set_def)+
   next
-    case (tAct \<alpha>1 t1 \<alpha>2 t2) then show ?case
-      apply auto
-       apply (rule_tac x=\<alpha>' in exI)
-       apply (rule_tac x=t' in exI)
-       apply auto[1]
-       apply (rule_tac x="pa - p" in exI)
-       apply (auto simp add: alphas)[1]
-             apply (metis fresh_minus_perm fresh_star_def fresh_star_plus minus_perm_def)
-            apply (subgoal_tac "pa \<bullet> t1 =\<^sub>\<alpha> pa \<bullet> - p \<bullet> t2")
-             apply (metis alpha_Tree_transp alpha_Tree_symp transpE sympE)
-            apply (metis (mono_tags) alpha_Tree_eqvt' permute_minus_cancel(1))
-           apply (metis permute_minus_cancel(2))
-          apply (metis permute_minus_cancel(2))
-         apply (metis fresh_minus_perm fresh_star_def fresh_star_plus minus_perm_def)
-        apply (metis permute_minus_cancel(2))
-       apply (metis permute_minus_cancel(2))
-      apply (rule_tac x=\<alpha>' in exI)
-      apply (rule_tac x=t' in exI)
-      apply auto[1]
-      apply (rule_tac x="pa + p" in exI)
-      apply (auto simp add: alphas)[1]
-        apply (metis fresh_star_plus)
-       apply (subgoal_tac "pa \<bullet> p \<bullet> t1 =\<^sub>\<alpha> pa \<bullet> t2")
-        apply (metis alpha_Tree_transp alpha_Tree_symp transpE sympE)
-       apply (metis (mono_tags) alpha_Tree_eqvt')
-      apply (metis fresh_star_plus)
-      done
+    case (tAct \<alpha>1 t1 \<alpha>2 t2) show ?case
+    proof
+      assume "valid_Tree P (tAct \<alpha>1 t1)"
+      then obtain \<alpha>' t' P' where "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>' t' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree P' t'"
+        by auto
+      moreover from tAct.hyps have "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
+        using alpha_tAct by blast
+      ultimately show "valid_Tree P (tAct \<alpha>2 t2)"
+        by (metis Tree\<^sub>\<alpha>.abs_eq_iff valid_Tree.simps(4))
+    next
+      assume "valid_Tree P (tAct \<alpha>2 t2)"
+      then obtain \<alpha>' t' P' where "tAct \<alpha>2 t2 =\<^sub>\<alpha> tAct \<alpha>' t' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree P' t'"
+        by auto
+      moreover from tAct.hyps have "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
+        using alpha_tAct by blast
+      ultimately show "valid_Tree P (tAct \<alpha>1 t1)"
+        by (metis Tree\<^sub>\<alpha>.abs_eq_iff valid_Tree.simps(4))
+    qed
   qed simp_all
 
 
