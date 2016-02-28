@@ -27,44 +27,72 @@ proof (rule wf_relcomp_compatible)
     by (metis Tree_wf_eqvt' wf_Tree_wf wf_hull_rel_relcomp)
 next
   show "(hull_rel O Tree_wf) O alpha_Tree_rel \<subseteq> alpha_Tree_rel O (hull_rel O Tree_wf)"
-  apply auto
-  apply (rename_tac x4 x1 x2 x3)
-  apply (erule rev_mp)
-  apply (erule rev_mp)
-  apply (erule Tree_wf.induct)
-    apply auto
-    -- \<open>@{const tConj}\<close>
-    apply (erule hull_rel.cases)
-    apply (erule alpha_Tree_relE)
-    apply (case_tac x4)
-       apply auto[4]
-    apply (rename_tac t tset')
-    apply (subgoal_tac "\<exists>t' \<in> set_bset tset'. t =\<^sub>\<alpha> t'")
-     prefer 2
-     apply (metis rel_bset.rep_eq rel_set_def)
-    apply clarify
-    apply (drule_tac p=p in alpha_Tree_eqvt)
-    apply (metis Tree_wf.intros(1) alpha_Tree_relI hull_rel.intros relcomp.relcompI)
-   -- \<open>@{const tNot}\<close>
-   apply (erule hull_rel.cases)
-   apply (erule alpha_Tree_relE)
-   apply (case_tac x4)
-      apply auto[4]
-   apply (rename_tac t')
-   apply (drule_tac p=p in alpha_Tree_eqvt)
-   apply (metis Tree_wf.intros(2) alpha_Tree_relI hull_rel.intros relcomp.relcompI)
-  -- \<open>@{const tAct}\<close>
-  apply (erule hull_rel.cases)
-  apply (erule alpha_Tree_relE)
-  apply (case_tac x4)
-     apply auto[4]
-  apply (rename_tac \<alpha>' t' q)
-  apply (auto simp add: alphas)
-  apply (drule_tac p="p-q" in alpha_Tree_eqvt)
-  apply simp
-  apply (simp only: permute_diff[symmetric])
-  apply (metis Tree_wf.intros(3) alpha_Tree_relI hull_rel.intros relcomp.relcompI)
-  done
+  proof
+    fix x :: "('d, 'e, 'f) Tree \<times> ('d, 'e, 'f) Tree"
+    assume "x \<in> (hull_rel O Tree_wf) O alpha_Tree_rel"
+    then obtain x1 x2 x3 x4 where x: "x = (x1,x4)" and 1: "(x1,x2) \<in> hull_rel" and 2: "(x2,x3) \<in> Tree_wf" and 3: "(x3,x4) \<in> alpha_Tree_rel"
+      by auto
+    from 2 have "(x1,x4) \<in> alpha_Tree_rel O hull_rel O Tree_wf"
+      using 1 and 3 proof (induct rule: Tree_wf.induct)
+        -- \<open>@{const tConj}\<close>
+        fix t and tset :: "('d,'e,'f) Tree set['d]"
+        assume *: "t \<in> set_bset tset" and **: "(x1,t) \<in> hull_rel" and ***: "(tConj tset, x4) \<in> alpha_Tree_rel"
+        from "**" obtain p where x1: "x1 = p \<bullet> t"
+          using hull_rel.cases by blast
+        from "***" have "tConj tset =\<^sub>\<alpha> x4"
+          by (rule alpha_Tree_relE)
+        then obtain tset' where x4: "x4 = tConj tset'" and "rel_bset (op =\<^sub>\<alpha>) tset tset'"
+          by (cases "x4") simp_all
+        with "*" obtain t' where t': "t' \<in> set_bset tset'" and "t =\<^sub>\<alpha> t'"
+          by (metis rel_bset.rep_eq rel_set_def)
+        with x1 have "(x1, p \<bullet> t') \<in> alpha_Tree_rel"
+          by (metis Tree\<^sub>\<alpha>.abs_eq_iff alpha_Tree_relI permute_Tree\<^sub>\<alpha>.abs_eq)
+        moreover have "(p \<bullet> t', t') \<in> hull_rel"
+          by (rule hull_rel.intros)
+        moreover from x4 and t' have "(t', x4) \<in> Tree_wf"
+          by (simp add: Tree_wf.intros(1))
+        ultimately show "(x1,x4) \<in> alpha_Tree_rel O hull_rel O Tree_wf"
+          by auto
+      next
+        -- \<open>@{const tNot}\<close>
+        fix t
+        assume *: "(x1,t) \<in> hull_rel" and **: "(tNot t, x4) \<in> alpha_Tree_rel"
+        from "*" obtain p where x1: "x1 = p \<bullet> t"
+          using hull_rel.cases by blast
+        from "**" have "tNot t =\<^sub>\<alpha> x4"
+          by (rule alpha_Tree_relE)
+        then obtain t' where x4: "x4 = tNot t'" and "t =\<^sub>\<alpha> t'"
+          by (cases "x4") simp_all
+        with x1 have "(x1, p \<bullet> t') \<in> alpha_Tree_rel"
+          by (metis Tree\<^sub>\<alpha>.abs_eq_iff alpha_Tree_relI permute_Tree\<^sub>\<alpha>.abs_eq x1)
+        moreover have "(p \<bullet> t', t') \<in> hull_rel"
+          by (rule hull_rel.intros)
+        moreover from x4 have "(t', x4) \<in> Tree_wf"
+          using Tree_wf.intros(2) by blast
+        ultimately show "(x1,x4) \<in> alpha_Tree_rel O hull_rel O Tree_wf"
+          by auto
+      next
+        -- \<open>@{const tAct}\<close>
+        fix \<alpha> t
+        assume *: "(x1,t) \<in> hull_rel" and **: "(tAct \<alpha> t, x4) \<in> alpha_Tree_rel"
+        from "*" obtain p where x1: "x1 = p \<bullet> t"
+          using hull_rel.cases by blast
+        from "**" have "tAct \<alpha> t =\<^sub>\<alpha> x4"
+          by (rule alpha_Tree_relE)
+        then obtain q t' where x4: "x4 = tAct (q \<bullet> \<alpha>) t'" and "q \<bullet> t =\<^sub>\<alpha> t'"
+          by (cases "x4") (auto simp add: alpha_set)
+        with x1 have "(x1, p \<bullet> -q \<bullet> t') \<in> alpha_Tree_rel"
+          by (metis Tree\<^sub>\<alpha>.abs_eq_iff alpha_Tree_relI permute_Tree\<^sub>\<alpha>.abs_eq permute_minus_cancel(1))
+        moreover have "(p \<bullet> -q \<bullet> t', t') \<in> hull_rel"
+          by (metis hull_rel.simps permute_plus)
+        moreover from x4 have "(t', x4) \<in> Tree_wf"
+          by (simp add: Tree_wf.intros(3))
+        ultimately show "(x1,x4) \<in> alpha_Tree_rel O hull_rel O Tree_wf"
+          by auto
+      qed
+    with x show "x \<in> alpha_Tree_rel O hull_rel O Tree_wf"
+      by simp
+  qed
 qed
 
 lemma alpha_Tree_rel_relcomp_trivialI [simp]:
