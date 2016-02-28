@@ -319,20 +319,17 @@ begin
   by transfer simp
 
   lemma valid_Act: "P \<Turnstile> Act \<alpha> x \<longleftrightarrow> (\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x')"
-  apply (simp add: valid_def Act_def)
-  apply (subgoal_tac "Rep_formula (Abs_formula (Act\<^sub>\<alpha> \<alpha> (Rep_formula x))) = Act\<^sub>\<alpha> \<alpha> (Rep_formula x)")
-   prefer 2
-   apply (metis Act.rep_eq Rep_formula_inverse)
-  apply simp
-  apply (thin_tac _)
-  apply auto
-   apply (rule_tac x=\<alpha>' in exI)
-   apply (rule_tac x="Abs_formula t\<^sub>\<alpha>'" in exI)
-   apply (metis Formula.Abs_formula_inverse Rep_formula' hereditarily_fs_alpha_renaming)
-  apply (rule_tac x=\<alpha>' in exI)
-  apply (rule_tac x="Rep_formula x'" in exI)
-  apply (metis Act\<^sub>\<alpha> Formula.Abs_formula_inverse Rep_formula')
-  done
+  proof
+    assume "P \<Turnstile> Act \<alpha> x"
+    moreover have "Rep_formula (Abs_formula (Act\<^sub>\<alpha> \<alpha> (Rep_formula x))) = Act\<^sub>\<alpha> \<alpha> (Rep_formula x)"
+      by (metis Act.rep_eq Rep_formula_inverse)
+    ultimately show "\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x'"
+      by (auto simp add: valid_def Act_def) (metis Abs_formula_inverse Rep_formula' hereditarily_fs_alpha_renaming)
+  next
+    assume "\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x'"
+    then show "P \<Turnstile> Act \<alpha> x"
+      by (metis Act.rep_eq valid.rep_eq valid_Tree\<^sub>\<alpha>_Act\<^sub>\<alpha>)
+  qed
 
   lemma valid_Act_strong: "P \<Turnstile> Act \<alpha> x \<longleftrightarrow> (\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* P)"
   proof
