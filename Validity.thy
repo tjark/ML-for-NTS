@@ -153,15 +153,28 @@ begin
 
   lemma valid_Tree_eqvt': "valid_Tree P t \<longleftrightarrow> valid_Tree (p \<bullet> P) (p \<bullet> t)"
   using assms proof (induction P t rule: valid_Tree.induct)
-    case (1 P tset) then show ?case
-      apply auto
-       apply (subgoal_tac "-p \<bullet> x \<in> set_bset tset")
-        apply (metis permute_minus_cancel(1))
-       apply (metis mem_Collect_eq permute_bset.rep_eq permute_set_eq)
-      apply (subgoal_tac "p \<bullet> x \<in> set_bset (p \<bullet> tset)")
-       apply metis
-      apply (metis mem_permute_iff permute_bset.rep_eq)
-      done
+    case (1 P tset) show ?case
+      proof
+        assume *: "valid_Tree P (tConj tset)"
+        {
+          fix t
+          assume "t \<in> p \<bullet> set_bset tset"
+          with "1.IH" and "*" have "valid_Tree (p \<bullet> P) t"
+            by (metis (no_types, lifting) imageE permute_set_eq_image valid_Tree.simps(1))
+        }
+        then show "valid_Tree (p \<bullet> P) (p \<bullet> tConj tset)"
+          by simp
+      next
+        assume *: "valid_Tree (p \<bullet> P) (p \<bullet> tConj tset)"
+        {
+          fix t
+          assume "t \<in> set_bset tset"
+          with "1.IH" and "*" have "valid_Tree P t"
+            by (metis mem_permute_iff permute_Tree_tConj set_bset_eqvt valid_Tree.simps(1))
+        }
+        then show "valid_Tree P (tConj tset)"
+          by simp
+      qed
   next
     case 2 then show ?case by simp
   next
