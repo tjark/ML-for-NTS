@@ -114,27 +114,37 @@ begin
               *: "\<forall>Q'\<in>?Q'. supp (f Q') \<subseteq> supp P' \<and> (f Q') distinguishes P' from Q'"
               by metis
             have "supp P' supports (f ` ?Q')"
-              apply (auto simp add: supports_def image_def)
-               apply (rename_tac abQ')
-               apply (rule_tac x="(a \<rightleftharpoons> b) \<bullet> abQ'" in exI)
-               apply (rule context_conjI)
-                apply (metis abs_residual_pair_eqvt permute_swap_cancel transition_eqvt)
-               apply (subgoal_tac "supp (f ((a \<rightleftharpoons> b) \<bullet> abQ')) \<subseteq> supp P'")
-                prefer 2
-                apply (metis "*" mem_Collect_eq)
-               apply (subgoal_tac "(a \<rightleftharpoons> b) \<bullet> f ((a \<rightleftharpoons> b) \<bullet> abQ') = f ((a \<rightleftharpoons> b) \<bullet> abQ')")
-                prefer 2
-                apply (metis contra_subsetD supp_supports supports_def)
-               apply (metis eqvt_lambda minus_swap unpermute_def)
-              apply (rename_tac Q')
-              apply (rule_tac x="(a \<rightleftharpoons> b) \<bullet> Q'" in exI)
-              apply (rule conjI)
-               apply (metis abs_residual_pair_eqvt transition_eqvt)
-              apply (subgoal_tac "(a \<rightleftharpoons> b) \<bullet> f Q' = f Q'")
-               prefer 2
-               apply (metis "*" contra_subsetD mem_Collect_eq supp_supports supports_def)
-              apply (metis eqvt_bound eqvt_lambda permute_minus_cancel(2))
-              done
+              unfolding supports_def proof (clarify)
+                fix a b
+                assume a: "a \<notin> supp P'" and b: "b \<notin> supp P'"
+                have "(a \<rightleftharpoons> b) \<bullet> (f ` ?Q') \<subseteq> f ` ?Q'"
+                proof
+                  fix x'
+                  assume "x' \<in> (a \<rightleftharpoons> b) \<bullet> (f ` ?Q')"
+                  then obtain Q' where 1: "x' = (a \<rightleftharpoons> b) \<bullet> f Q'" and 2: "Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle>"
+                    by auto (metis permute_swap_cancel transition_eqvt')
+                  with "*" and a and b have "a \<notin> supp (f Q')" and "b \<notin> supp (f Q')"
+                    by auto
+                  with 1 have "x' = f Q'"
+                    by (metis fresh_perm fresh_star_def supp_perm_eq swap_atom)
+                  with 2 show "x' \<in> f ` ?Q'"
+                    by simp
+                qed
+                moreover have "f ` ?Q' \<subseteq> (a \<rightleftharpoons> b) \<bullet> (f ` ?Q')"
+                proof
+                  fix x'
+                  assume "x' \<in> f ` ?Q'"
+                  then obtain Q' where 1: "x' = f Q'" and 2: "Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle>"
+                    by auto
+                  with "*" and a and b have "a \<notin> supp (f Q')" and "b \<notin> supp (f Q')"
+                    by auto
+                  with 1 have "x' = (a \<rightleftharpoons> b) \<bullet> f Q'"
+                    by (metis fresh_perm fresh_star_def supp_perm_eq swap_atom)
+                  with 2 show "x' \<in> (a \<rightleftharpoons> b) \<bullet> (f ` ?Q')"
+                    using mem_permute_iff by blast
+                qed
+                ultimately show "(a \<rightleftharpoons> b) \<bullet> (f ` ?Q') = f ` ?Q'" ..
+              qed
             then have supp_image_subset_supp_P': "supp (f ` ?Q') \<subseteq> supp P'"
               by (metis (erased, lifting) finite_supp supp_is_subset)
             then have finite_supp_image: "finite (supp (f ` ?Q'))"
@@ -148,21 +158,28 @@ begin
             finally have card_image: "|f ` ?Q'| <o natLeq +c |UNIV :: 'idx set|" .
             let ?y = "Conj (Abs_bset (f ` ?Q')) :: ('idx, 'pred, 'act) formula"
             have "P \<Turnstile> Act \<alpha> ?y"
-              apply (simp add: valid_Act)
-              apply (rule_tac x=\<alpha> in exI)
-              apply (rule_tac x="?y" in exI)
-              apply simp
-              apply (rule_tac x=P' in exI)
-              apply (rule conjI)
-               apply (fact `P \<rightarrow> \<langle>\<alpha>,P'\<rangle>`)
-              apply (auto simp add: finite_supp_image card_image)
-              apply (metis "*" distinguishing_formula_def mem_Collect_eq)
-              done
+              unfolding valid_Act proof (default+)
+                show "P \<rightarrow> \<langle>\<alpha>,P'\<rangle>" by fact
+              next
+                {
+                  fix Q'
+                  assume "Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle>"
+                  with "*" have "P' \<Turnstile> f Q'"
+                    by (metis distinguishing_formula_def mem_Collect_eq)
+                }
+                then show "P' \<Turnstile> ?y"
+                  by (simp add: finite_supp_image card_image)
+              qed
             moreover have "\<not> Q \<Turnstile> Act \<alpha> ?y"
-              apply (auto simp add: `bn \<alpha> \<sharp>* Q` valid_Act_fresh)
-              apply (auto simp add: finite_supp_image card_image)
-              apply (metis "*" distinguishing_formula_def mem_Collect_eq)
-              done
+              proof
+                assume "Q \<Turnstile> Act \<alpha> ?y"
+                then obtain Q' where 1: "Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle>" and 2: "Q' \<Turnstile> ?y"
+                  using `bn \<alpha> \<sharp>* Q` by (metis valid_Act_fresh)
+                from 2 have "\<And>Q''. Q \<rightarrow> \<langle>\<alpha>,Q''\<rangle> \<longrightarrow> Q' \<Turnstile> f Q''"
+                  by (simp add: finite_supp_image card_image)
+                with 1 and "*" show False
+                  using distinguishing_formula_def by blast
+              qed
             ultimately have False
               by (metis `P =\<cdot> Q` logically_equivalent_def)
           }
