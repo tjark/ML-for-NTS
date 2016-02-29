@@ -20,9 +20,7 @@ begin
     from `P \<Turnstile> Act \<alpha> x` obtain \<alpha>' x' P' where eq: "Act \<alpha> x = Act \<alpha>' x'" and trans: "P \<rightarrow> \<langle>\<alpha>',P'\<rangle>" and valid: "P' \<Turnstile> x'"
       unfolding valid_Act by metis
     from eq obtain p where 1: "x' = p \<bullet> x"
-      apply (auto simp add: Act_eq_iff Act\<^sub>\<alpha>_eq_iff alphas)
-      apply (metis Rep_formula_inverse Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq permute_formula.rep_eq)
-      done
+      by (auto simp add: Act_eq_iff Act\<^sub>\<alpha>_eq_iff alphas) (metis Rep_formula_inverse Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq permute_formula.rep_eq)
     -- \<open>rename~@{term "Act \<alpha>' x'"} to avoid~@{term Q}, without touching~@{term "\<langle>\<alpha>',P'\<rangle>"}\<close>
     obtain q where 2: "(q \<bullet> bn \<alpha>') \<sharp>* Q" and 3: "supp (Act \<alpha>' x', \<langle>\<alpha>',P'\<rangle>) \<sharp>* q"
       proof (rule at_set_avoiding2[of "bn \<alpha>'" Q "(Act \<alpha>' x', \<langle>\<alpha>',P'\<rangle>)", THEN exE])
