@@ -180,51 +180,32 @@ begin
   next
     case 3 show ?case by simp (metis permute_minus_cancel(2) satisfies_eqvt)
   next
-    case (4 P \<alpha> t) then show ?case
-      apply auto
-       apply (rule_tac x="p \<bullet> \<alpha>'" in exI)
-       apply (rule_tac x="p \<bullet> t'" in exI)
-       apply (rule conjI)
-        apply (rule_tac x="p + pa - p" in exI)
-        apply (auto simp add: alphas)[1]
-                      apply (metis Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt)
-                     apply (metis Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt)
-                    apply (metis Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt)
-                   apply (metis Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt)
-                  apply (metis Diff_eqvt bn_eqvt fresh_star_permute_iff fv_Tree_eqvt permute_perm_def)
-                 apply (metis alpha_Tree_eqvt')
-                apply (metis bn_eqvt permute_minus_cancel(2))
-               apply (metis bn_eqvt permute_minus_cancel(2))
-              apply (metis (no_types, lifting) DiffI Diff_subset bn_eqvt contra_subsetD mem_Collect_eq permute_set_eq supp_eqvt)
-             apply (metis Diff_eqvt Diff_iff bn_eqvt supp_eqvt)
-            apply (metis (erased, lifting) Diff_iff bn_eqvt mem_Collect_eq permute_set_eq supp_eqvt)
-           apply (metis (no_types) Diff_eqvt Diff_iff bn_eqvt supp_eqvt)
-          apply (metis (erased, hide_lams) Diff_eqvt bn_eqvt fresh_star_permute_iff permute_perm_def supp_eqvt)
-         apply (metis bn_eqvt permute_minus_cancel(2))
-        apply (metis bn_eqvt permute_minus_cancel(2))
-       apply (metis transition_eqvt')
-      apply (rule_tac x="-p \<bullet> \<alpha>'" in exI)
-      apply (rule_tac x="-p \<bullet> t'" in exI)
-      apply (rule context_conjI)
-       apply (rule_tac x="-p + pa + p" in exI)
-       apply (auto simp add: alphas)[1]
-                     apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
-                    apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
-                   apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
-                  apply (metis (mono_tags) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt permute_minus_cancel(2))
-                 apply (smt Diff_eqvt add_diff_cancel add_diff_eq add_minus_cancel add_perm_eqvt bn_eqvt diff_add_cancel diff_minus_eq_add fresh_star_permute_iff fv_Tree_eqvt minus_add_cancel minus_diff_eq minus_minus minus_perm_def neg_equal_iff_equal permute_perm_def permute_plus)
-                apply (metis alpha_Tree_eqvt')
-               apply (metis bn_eqvt)
-              apply (metis bn_eqvt)
-             apply (metis (erased, hide_lams) Diff_iff bn_eqvt eqvt_bound mem_permute_iff supp_eqvt unpermute_def)
-            apply (metis (no_types, hide_lams) Diff_eqvt Diff_iff bn_eqvt permute_minus_cancel(2) supp_eqvt)
-           apply (smt DiffI Diff_eqvt Diff_subset bn_eqvt contra_subsetD minus_minus permute_minus_cancel(1) supp_eqvt)
-          apply (metis (no_types, hide_lams) DiffE DiffI bn_eqvt eqvt_bound mem_permute_iff supp_eqvt unpermute_def)
-         apply (metis (erased, hide_lams) Diff_eqvt bn_eqvt diff_minus_eq_add fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
-        apply (metis bn_eqvt)
-       apply (metis bn_eqvt)
-      apply (metis (erased, hide_lams) eqvt_bound transition_eqvt' unpermute_def)
-      done
+    case (4 P \<alpha> t) show ?case
+      proof
+        assume "valid_Tree P (tAct \<alpha> t)"
+        then obtain \<alpha>' t' P' where *: "tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha>' t' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree P' t'"
+          by auto
+        with "4.IH" have "valid_Tree (p \<bullet> P') (p \<bullet> t')"
+          by blast
+        moreover from "*" have "p \<bullet> P \<rightarrow> \<langle>p \<bullet> \<alpha>', p \<bullet> P'\<rangle>"
+          by (metis transition_eqvt')
+        moreover from "*" have "p \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct (p \<bullet> \<alpha>') (p \<bullet> t')"
+          by (metis alpha_Tree_eqvt permute_Tree.simps(4))
+        ultimately show "valid_Tree (p \<bullet> P) (p \<bullet> tAct \<alpha> t)"
+          by auto
+      next
+        assume "valid_Tree (p \<bullet> P) (p \<bullet> tAct \<alpha> t)"
+        then obtain \<alpha>' t' P' where *: "p \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha>' t' \<and> (p \<bullet> P) \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> valid_Tree P' t'"
+          by auto
+        then have eq: "tAct \<alpha> t =\<^sub>\<alpha> tAct (-p \<bullet> \<alpha>') (-p \<bullet> t')"
+          by (metis alpha_Tree_eqvt permute_Tree.simps(4) permute_minus_cancel(2))
+        moreover from "*" have "P \<rightarrow> \<langle>-p \<bullet> \<alpha>', -p \<bullet> P'\<rangle>"
+          by (metis permute_minus_cancel(2) transition_eqvt')
+        moreover with "4.IH" have "valid_Tree (-p \<bullet> P') (-p \<bullet> t')"
+          using eq and "*" by simp
+        ultimately show "valid_Tree P (tAct \<alpha> t)"
+          by auto
+      qed
   qed
 
   lemma valid_Tree_eqvt [eqvt]:
