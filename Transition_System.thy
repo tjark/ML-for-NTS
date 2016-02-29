@@ -10,6 +10,8 @@ subsection \<open>Basic Lemmas\<close>
 lemma symp_eqvt [eqvt]:
   assumes "symp R" shows "symp (p \<bullet> R)"
 using assms unfolding symp_def by (subst permute_fun_def)+ (simp add: permute_pure)
+
+
 subsection \<open>Nominal transition systems\<close>
 
 locale nominal_ts =
@@ -83,32 +85,47 @@ begin
 
   lemma bisimilar_eqvt [eqvt]:
     assumes "P \<sim>\<cdot> Q" shows "(p \<bullet> P) \<sim>\<cdot> (p \<bullet> Q)"
-  using assms
-  apply (auto simp add: bisimilar_def)
-  apply (rule_tac x="p \<bullet> R" in exI)
-  apply (simp add: is_bisimulation_eqvt)
-  apply (metis eqvt_apply permute_boolI)
-  done
+  proof -
+    from assms obtain R where *: "is_bisimulation R \<and> R P Q"
+      unfolding bisimilar_def ..
+    then have "is_bisimulation (p \<bullet> R)"
+      by (simp add: is_bisimulation_eqvt)
+    moreover from "*" have "(p \<bullet> R) (p \<bullet> P) (p \<bullet> Q)"
+      by (metis eqvt_apply permute_boolI)
+    ultimately show "(p \<bullet> P) \<sim>\<cdot> (p \<bullet> Q)"
+      unfolding bisimilar_def by auto
+  qed
 
   lemma bisimilar_reflp: "reflp bisimilar"
-  apply (rule reflpI)
-  apply (simp add: bisimilar_def)
-  apply (rule_tac x="op =" in exI)
-  apply (simp add: is_bisimulation_def symp_def)
-  done
+  proof (rule reflpI)
+    fix x
+    have "is_bisimulation (op =)"
+      unfolding is_bisimulation_def by (simp add: symp_def)
+    then show "x \<sim>\<cdot> x"
+      unfolding bisimilar_def by auto
+  qed
 
   lemma bisimilar_symp: "symp bisimilar"
-  apply (rule sympI)
-  apply (auto simp add: bisimilar_def)
-  apply (rule_tac x="R" in exI)
-  apply (simp add: is_bisimulation_def symp_def)
-  done
+  proof (rule sympI)
+    fix P Q
+    assume "P \<sim>\<cdot> Q"
+    then obtain R where *: "is_bisimulation R \<and> R P Q"
+      unfolding bisimilar_def ..
+    then have "R Q P"
+      unfolding is_bisimulation_def by (simp add: symp_def)
+    with "*" show "Q \<sim>\<cdot> P"
+      unfolding bisimilar_def by auto
+  qed
 
   lemma bisimilar_is_bisimulation: "is_bisimulation bisimilar"
-  apply (auto simp add: is_bisimulation_def bisimilar_def)
-   apply (fact bisimilar_symp)
-  apply blast
-  done
+  unfolding is_bisimulation_def proof
+    show "symp op \<sim>\<cdot>"
+      by (fact bisimilar_symp)
+  next
+    show "(\<forall>P Q. P \<sim>\<cdot> Q \<longrightarrow> (\<forall>\<phi>. P \<turnstile> \<phi> \<longrightarrow> Q \<turnstile> \<phi>)) \<and>
+      (\<forall>P Q. P \<sim>\<cdot> Q \<longrightarrow> (\<forall>\<alpha> P'. bn \<alpha> \<sharp>* Q \<longrightarrow> P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<longrightarrow> (\<exists>Q'. Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> P' \<sim>\<cdot> Q')))"
+      by (auto simp add: is_bisimulation_def bisimilar_def) blast
+  qed
 
   lemma bisimilar_transp: "transp bisimilar"
   proof (rule transpI)
