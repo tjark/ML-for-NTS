@@ -106,10 +106,13 @@ next
 qed
 
 lemma Tree_wf_eqvt [eqvt, simp]: "p \<bullet> Tree_wf = Tree_wf"
-apply (auto simp add: permute_set_def)
- apply (metis Tree_wf_eqvt_aux)
-apply (metis Tree_wf_eqvt_aux permute_minus_cancel(1))
-done
+proof
+  show "p \<bullet> Tree_wf \<subseteq> Tree_wf"
+    by (auto simp add: permute_set_def) (rule Tree_wf_eqvt_aux)
+next
+  show "Tree_wf \<subseteq> p \<bullet> Tree_wf"
+    by (auto simp add: permute_set_def) (metis Tree_wf_eqvt_aux permute_minus_cancel(1))
+qed
 
 lemma Tree_wf_eqvt': "eqvt Tree_wf"
 by (metis Tree_wf_eqvt eqvtI)
@@ -263,7 +266,7 @@ lemmas alpha_Tree_fv_Tree_induct = alpha_Tree_fv_Tree.induct[case_names alpha_tC
 lemma alpha_Tree_induct[case_names tConj tNot tPred tAct, consumes 1]:
   assumes "t1 =\<^sub>\<alpha> t2"
   and "\<And>tset1 tset2. (\<And>a b. a \<in> set_bset tset1 \<Longrightarrow> b \<in> set_bset tset2 \<Longrightarrow> a =\<^sub>\<alpha> b \<Longrightarrow> P a b) \<Longrightarrow>
-            rel_bset op =\<^sub>\<alpha> tset1 tset2 \<Longrightarrow> P (tConj tset1) (tConj tset2)"
+            rel_bset (op =\<^sub>\<alpha>) tset1 tset2 \<Longrightarrow> P (tConj tset1) (tConj tset2)"
   and "\<And>t1 t2. t1 =\<^sub>\<alpha> t2 \<Longrightarrow> P t1 t2 \<Longrightarrow> P (tNot t1) (tNot t2)"
   and "\<And>\<phi>. P (tPred \<phi>) (tPred \<phi>)"
   and "\<And>\<alpha>1 t1 \<alpha>2 t2. (\<And>p. p \<bullet> t1 =\<^sub>\<alpha> t2 \<Longrightarrow> P (p \<bullet> t1) t2) \<Longrightarrow>
@@ -404,17 +407,13 @@ proof (rule sympI)
     case tConj then show ?case
       by (simp add: rel_bset_def rel_set_def) metis
   next
-    case tAct then show ?case
-apply auto
-apply (rule_tac x="- p" in exI)
-apply (simp add: alpha_set)
-apply clarsimp
-apply (rule conjI)
- apply (metis fresh_minus_perm fresh_star_def)
-apply (rule conjI)
- apply (metis alpha_Tree_eqvt permute_minus_cancel(1))
-apply (metis fresh_minus_perm fresh_star_def permute_minus_cancel(2))
-done
+    case (tAct \<alpha>1 t1 \<alpha>2 t2)
+    then obtain p where "(bn \<alpha>1, t1) \<approx>set op =\<^sub>\<alpha> fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)"
+      by auto
+    then have "(bn \<alpha>2, t2) \<approx>set op =\<^sub>\<alpha> fv_Tree (-p) (bn \<alpha>1, t1) \<and> (bn \<alpha>2, \<alpha>2) \<approx>set (op =) supp (-p) (bn \<alpha>1, \<alpha>1)"
+      using tAct.IH by (metis (mono_tags, lifting) alpha_Tree_eqvt alpha_sym(1) permute_minus_cancel(2))
+    then show ?case
+      by auto
   qed simp_all
 qed
 
@@ -424,11 +423,42 @@ proof (rule transpI)
   assume "x =\<^sub>\<alpha> y" and "y =\<^sub>\<alpha> z"
   then show "x =\<^sub>\<alpha> z"
   proof (induction x y arbitrary: z rule: alpha_Tree_induct)
-    case tConj then show ?case
-apply (cases z) apply simp_all
-apply (simp add: rel_bset_def rel_set_def)
-apply metis
-done
+    case (tConj tset_x tset_y) show ?case
+      proof (cases z)
+        fix tset_z
+        assume z: "z = tConj tset_z"
+        have "rel_bset (op =\<^sub>\<alpha>) tset_x tset_z"
+          unfolding rel_bset.rep_eq rel_set_def Ball_def Bex_def
+          proof
+            show "\<forall>x'. x' \<in> set_bset tset_x \<longrightarrow> (\<exists>z'. z' \<in> set_bset tset_z \<and> x' =\<^sub>\<alpha> z')"
+            proof (rule allI, rule impI)
+              fix x' assume 1: "x' \<in> set_bset tset_x"
+              then obtain y' where 2: "y' \<in> set_bset tset_y" and 3: "x' =\<^sub>\<alpha> y'"
+                by (metis rel_bset.rep_eq rel_set_def tConj.hyps)
+              from 2 obtain z' where 4: "z' \<in> set_bset tset_z" and 5: "y' =\<^sub>\<alpha> z'"
+                by (metis alpha_tConj rel_bset.rep_eq rel_set_def tConj.prems z)
+              from 1 2 3 5 have "x' =\<^sub>\<alpha> z'"
+                by (rule tConj.IH)
+              with 4 show "\<exists>z'. z' \<in> set_bset tset_z \<and> x' =\<^sub>\<alpha> z'"
+                by auto
+            qed
+          next
+            show "\<forall>z'. z' \<in> set_bset tset_z \<longrightarrow> (\<exists>x'. x' \<in> set_bset tset_x \<and> x' =\<^sub>\<alpha> z')"
+            proof (rule allI, rule impI)
+              fix z' assume 1: "z' \<in> set_bset tset_z"
+              then obtain y' where 2: "y' \<in> set_bset tset_y" and 3: "y' =\<^sub>\<alpha> z'"
+                by (metis alpha_tConj rel_bset.rep_eq rel_set_def tConj.prems z)
+              from 2 obtain x' where 4: "x' \<in> set_bset tset_x" and 5: "x' =\<^sub>\<alpha> y'"
+                by (metis rel_bset.rep_eq rel_set_def tConj.hyps)
+              from 4 2 5 3 have "x' =\<^sub>\<alpha> z'"
+                by (rule tConj.IH)
+              with 4 show "\<exists>x'. x' \<in> set_bset tset_x \<and> x' =\<^sub>\<alpha> z'"
+                by auto
+            qed
+          qed
+        with z show "tConj tset_x =\<^sub>\<alpha> z"
+          by simp
+      qed (insert tConj.prems, auto)
   next
     case tNot then show ?case
       by (cases z) simp_all
@@ -436,15 +466,32 @@ done
     case tPred then show ?case
       by simp
   next
-    case tAct then show ?case
-apply (cases z) apply auto
-apply (rule_tac x="pa + p" in exI)
-apply (simp add: alpha_set)
-apply clarsimp
-apply (rule conjI)
- apply (metis fresh_star_plus)
-apply (metis (erased, hide_lams) alpha_Tree_eqvt' fresh_star_plus permute_minus_cancel(1))
-done
+    case (tAct \<alpha>1 t1 \<alpha>2 t2) show ?case
+    proof (cases z)
+      fix \<alpha> t
+      assume z: "z = tAct \<alpha> t"
+      obtain p where 1: "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)"
+        using tAct.hyps by auto
+      obtain q where 2: "(bn \<alpha>2, t2) \<approx>set (op =\<^sub>\<alpha>) fv_Tree q (bn \<alpha>, t) \<and> (bn \<alpha>2, \<alpha>2) \<approx>set (op =) supp q (bn \<alpha>, \<alpha>)"
+        using tAct.prems z by auto
+      have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (q + p) (bn \<alpha>, t)"
+        proof -
+          have "fv_Tree t1 - bn \<alpha>1 = fv_Tree t - bn \<alpha>"
+            using 1 and 2 by (metis alpha_set.simps)
+          moreover have "(fv_Tree t1 - bn \<alpha>1) \<sharp>* (q + p)"
+            using 1 and 2 by (metis alpha_set.simps fresh_star_plus)
+          moreover have "(q + p) \<bullet> t1 =\<^sub>\<alpha> t"
+            using 1 and 2 and tAct.IH by (metis (no_types, lifting) alpha_Tree_eqvt alpha_set.simps permute_minus_cancel(1) permute_plus)
+          moreover have "(q + p) \<bullet> bn \<alpha>1 = bn \<alpha>"
+            using 1 and 2 by (metis alpha_set.simps permute_plus)
+          ultimately show ?thesis
+            by (metis alpha_set)
+        qed
+      moreover have "(bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp (q + p) (bn \<alpha>, \<alpha>)"
+        using 1 and 2 by (metis (mono_tags) alpha_trans(1) permute_plus)
+      ultimately show "tAct \<alpha>1 t1 =\<^sub>\<alpha> z"
+        using z by auto
+    qed (insert tAct.prems, auto)
   qed
 qed
 
@@ -457,29 +504,21 @@ lemma alpha_Tree_fv_Tree:
   assumes "t1 =\<^sub>\<alpha> t2"
   shows "fv_Tree t1 = fv_Tree t2"
 using assms proof (induction rule: alpha_Tree_induct)
-  case (tConj tset1 tset2) then show ?case
-apply simp
-apply (subst Supp_def)
-apply (subst Supp_def)
-apply simp
-apply (subgoal_tac "\<And>a b. rel_bset op =\<^sub>\<alpha> ((a \<rightleftharpoons> b) \<bullet> tset1) tset1 \<longleftrightarrow> rel_bset op =\<^sub>\<alpha> ((a \<rightleftharpoons> b) \<bullet> tset2) tset2")
- apply simp
-apply (subgoal_tac "rel_bset op =\<^sub>\<alpha> ((a \<rightleftharpoons> b) \<bullet> tset1) ((a \<rightleftharpoons> b) \<bullet> tset2)")
- prefer 2
- apply (metis Formula.alpha_tConj alpha_Tree_eqvt permute_Tree_tConj)
-apply (subgoal_tac "rel_bset op =\<^sub>\<alpha> ((a \<rightleftharpoons> b) \<bullet> tset2) ((a \<rightleftharpoons> b) \<bullet> tset1)")
- prefer 2
- apply (metis rel_bset_symp alpha_Tree_symp sympE)
-apply (rule iffI)
- apply (metis rel_bset_transp alpha_Tree_transp transpE)
-apply (subgoal_tac "rel_bset op =\<^sub>\<alpha> tset2 tset1")
- prefer 2
- apply (metis rel_bset_symp alpha_Tree_symp sympE)
-apply (metis rel_bset_transp alpha_Tree_transp transpE)
-done
+  case (tConj tset1 tset2)
+  have sym: "\<And>x y. rel_bset (op =\<^sub>\<alpha>) x y \<longleftrightarrow> rel_bset (op =\<^sub>\<alpha>) y x"
+    by (meson alpha_Tree_symp rel_bset_symp sympE)
+  {
+    fix a b
+    from tConj.hyps have *: "rel_bset (op =\<^sub>\<alpha>) ((a \<rightleftharpoons> b) \<bullet> tset1) ((a \<rightleftharpoons> b) \<bullet> tset2)"
+      by (metis alpha_tConj alpha_Tree_eqvt permute_Tree_tConj)
+    have "rel_bset (op =\<^sub>\<alpha>) ((a \<rightleftharpoons> b) \<bullet> tset1) tset1 \<longleftrightarrow> rel_bset (op =\<^sub>\<alpha>) ((a \<rightleftharpoons> b) \<bullet> tset2) tset2"
+      by (rule iffI) (metis "*" alpha_Tree_transp rel_bset_transp sym tConj.hyps transpE)+
+  }
+  then show ?case
+    by (simp add: Supp_def)
 next
   case tAct then show ?case
-   by (clarsimp simp add: alphas alphas_abs) (metis Un_Diff)
+    by (clarsimp simp add: alphas alphas_abs) (metis Un_Diff)
 qed simp_all
 
 text \<open>@{const tAct} preserves $\alpha$-equivalence.\<close>
@@ -487,12 +526,12 @@ text \<open>@{const tAct} preserves $\alpha$-equivalence.\<close>
 lemma alpha_Tree_tAct:
   assumes "t1 =\<^sub>\<alpha> t2"
   shows "tAct \<alpha> t1 =\<^sub>\<alpha> tAct \<alpha> t2"
-proof (simp)
+proof -
   have "(bn \<alpha>, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree 0 (bn \<alpha>, t2)" (is "?P 0")
     using assms by (simp add: alpha_Tree_fv_Tree alphas(1) fresh_star_zero)
   moreover have "(bn \<alpha>, \<alpha>) \<approx>set (op =) supp 0 (bn \<alpha>, \<alpha>)" (is "?Q 0")
     by (metis (full_types) alpha_refl(1))
-  ultimately show "\<exists>p. ?P p \<and> ?Q p"
+  ultimately show ?thesis
     by auto
 qed
 
@@ -569,21 +608,45 @@ by (fact alpha_Tree_tAct)
 text \<open>The lifted constructors are equivariant.\<close>
 
 lemma Conj\<^sub>\<alpha>_eqvt [eqvt, simp]: "p \<bullet> Conj\<^sub>\<alpha> tset\<^sub>\<alpha> = Conj\<^sub>\<alpha> (p \<bullet> tset\<^sub>\<alpha>)"
-unfolding Conj\<^sub>\<alpha>_def'
-apply (simp add: Tree\<^sub>\<alpha>.abs_eq_iff)
-apply transfer
-apply (auto simp add: rel_set_def)
- apply (rule_tac x="abs_Tree\<^sub>\<alpha> x" in bexI)
-  apply (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep)
- apply (auto simp add: image_def permute_set_def)[1]
- apply (rename_tac t\<^sub>\<alpha>)
- apply (rule_tac x=t\<^sub>\<alpha> in exI)
- apply (metis Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq)
-apply (rename_tac t\<^sub>\<alpha>)
-apply (rule_tac x="p \<bullet> rep_Tree\<^sub>\<alpha> (-p \<bullet> t\<^sub>\<alpha>)" in bexI)
- apply (metis alpha_Tree_permute_rep_commute permute_minus_cancel(1))
-apply (auto simp add: image_def permute_set_def)
-done
+proof -
+  {
+    fix x
+    assume "x \<in> set_bset (p \<bullet> map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>)"
+    then obtain y where "y \<in> set_bset (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>)" and "x = p \<bullet> y"
+      by (metis imageE permute_bset.rep_eq permute_set_eq_image)
+    then obtain t\<^sub>\<alpha> where 1: "t\<^sub>\<alpha> \<in> set_bset tset\<^sub>\<alpha>" and 2: "x = p \<bullet> rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>"
+      by (metis imageE map_bset.rep_eq)
+    let ?x' = "rep_Tree\<^sub>\<alpha> (p \<bullet> t\<^sub>\<alpha>)"
+    from 1 have "p \<bullet> t\<^sub>\<alpha> \<in> set_bset (p \<bullet> tset\<^sub>\<alpha>)"
+      by (metis mem_permute_iff permute_bset.rep_eq)
+    then have "?x' \<in> set_bset (map_bset rep_Tree\<^sub>\<alpha> (p \<bullet> tset\<^sub>\<alpha>))"
+      by (simp add: bset.set_map)
+    moreover from 2 have "x =\<^sub>\<alpha> ?x'"
+      by (metis alpha_Tree_permute_rep_commute)
+    ultimately have "\<exists>x'\<in>set_bset (map_bset rep_Tree\<^sub>\<alpha> (p \<bullet> tset\<^sub>\<alpha>)). x =\<^sub>\<alpha> x'"
+      ..
+  }
+  moreover
+  {
+    fix y
+    assume "y \<in> set_bset (map_bset rep_Tree\<^sub>\<alpha> (p \<bullet> tset\<^sub>\<alpha>))"
+    then obtain x where "x \<in> set_bset (p \<bullet> tset\<^sub>\<alpha>)" and "rep_Tree\<^sub>\<alpha> x = y"
+      by (metis imageE map_bset.rep_eq)
+    then obtain t\<^sub>\<alpha> where 1: "t\<^sub>\<alpha> \<in> set_bset tset\<^sub>\<alpha>" and 2: "rep_Tree\<^sub>\<alpha> (p \<bullet> t\<^sub>\<alpha>) = y"
+      by (metis imageE permute_bset.rep_eq permute_set_eq_image)
+    let ?y' = "p \<bullet> rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>"
+    from 1 have "rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha> \<in> set_bset (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>)"
+      by (simp add: bset.set_map)
+    then have "?y' \<in> set_bset (p \<bullet> map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>)"
+      by (metis mem_permute_iff permute_bset.rep_eq)
+    moreover from 2 have "?y' =\<^sub>\<alpha> y"
+      by (metis alpha_Tree_permute_rep_commute)
+    ultimately have "\<exists>y'\<in>set_bset (p \<bullet> map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>). y' =\<^sub>\<alpha> y"
+      ..
+  }
+  ultimately show ?thesis
+    by (simp add: Conj\<^sub>\<alpha>_def' map_bset_eqvt rel_bset_def rel_set_def Tree\<^sub>\<alpha>.abs_eq_iff)
+qed
 
 lemma Not\<^sub>\<alpha>_eqvt [eqvt, simp]: "p \<bullet> Not\<^sub>\<alpha> t\<^sub>\<alpha> = Not\<^sub>\<alpha> (p \<bullet> t\<^sub>\<alpha>)"
 by (induct t\<^sub>\<alpha>) (simp add: Not\<^sub>\<alpha>.abs_eq)
@@ -601,18 +664,11 @@ proof
   assume "Conj\<^sub>\<alpha> tset1\<^sub>\<alpha> = Conj\<^sub>\<alpha> tset2\<^sub>\<alpha>"
   then have "tConj (map_bset rep_Tree\<^sub>\<alpha> tset1\<^sub>\<alpha>) =\<^sub>\<alpha> tConj (map_bset rep_Tree\<^sub>\<alpha> tset2\<^sub>\<alpha>)"
     by (metis Conj\<^sub>\<alpha>_def' Tree\<^sub>\<alpha>.abs_eq_iff)
-  then have "rel_bset alpha_Tree (map_bset rep_Tree\<^sub>\<alpha> tset1\<^sub>\<alpha>) (map_bset rep_Tree\<^sub>\<alpha> tset2\<^sub>\<alpha>)"
+  then have "rel_bset (op =\<^sub>\<alpha>) (map_bset rep_Tree\<^sub>\<alpha> tset1\<^sub>\<alpha>) (map_bset rep_Tree\<^sub>\<alpha> tset2\<^sub>\<alpha>)"
     by (auto elim: alpha_Tree.cases)
   then show "tset1\<^sub>\<alpha> = tset2\<^sub>\<alpha>"
-apply transfer
-apply (auto simp add: rel_set_def image_def)
- apply (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep)
-apply (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep)
-done
-next
-  assume "tset1\<^sub>\<alpha> = tset2\<^sub>\<alpha>" then show "Conj\<^sub>\<alpha> tset1\<^sub>\<alpha> = Conj\<^sub>\<alpha> tset2\<^sub>\<alpha>"
-    by simp
-qed
+    using Quotient_Tree\<^sub>\<alpha> Quotient_rel_abs2 bset_quot_map map_bset_abs_rep_Tree\<^sub>\<alpha> by fastforce
+qed (fact arg_cong)
 
 lemma Not\<^sub>\<alpha>_eq_iff [simp]: "Not\<^sub>\<alpha> t1\<^sub>\<alpha> = Not\<^sub>\<alpha> t2\<^sub>\<alpha> \<longleftrightarrow> t1\<^sub>\<alpha> = t2\<^sub>\<alpha>"
 proof
@@ -649,14 +705,25 @@ lemma Tree\<^sub>\<alpha>_free [simp]:
   and "Not\<^sub>\<alpha> t\<^sub>\<alpha> \<noteq> Pred\<^sub>\<alpha> \<phi>"
   and "Not\<^sub>\<alpha> t1\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t2\<^sub>\<alpha>"
   and "Pred\<^sub>\<alpha> \<phi> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-apply auto
-     apply (metis Conj\<^sub>\<alpha>_def' Not\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree.simps(5))
-    apply (metis Conj\<^sub>\<alpha>_def' Pred\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff alpha_Tree.simps(17))
-   apply (metis Conj\<^sub>\<alpha>_def' Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree.simps(11))
-  apply (metis Not\<^sub>\<alpha>.abs_eq Pred\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree.simps(6))
- apply (metis Act\<^sub>\<alpha>_def Not\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff alpha_Tree.simps(7) map_fun_apply)
-apply (metis Act\<^sub>\<alpha>.abs_eq Pred\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree.simps(10))
-done
+proof -
+  show "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Not\<^sub>\<alpha> t\<^sub>\<alpha>"
+    by (simp add: Conj\<^sub>\<alpha>_def' Not\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
+next
+  show "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Pred\<^sub>\<alpha> \<phi>"
+    by (simp add: Conj\<^sub>\<alpha>_def' Pred\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
+next
+  show "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
+    by (simp add: Conj\<^sub>\<alpha>_def' Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
+next
+  show "Not\<^sub>\<alpha> t\<^sub>\<alpha> \<noteq> Pred\<^sub>\<alpha> \<phi>"
+    by (simp add: Not\<^sub>\<alpha>_def Pred\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
+next
+  show "Not\<^sub>\<alpha> t1\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t2\<^sub>\<alpha>"
+    by (simp add: Not\<^sub>\<alpha>_def Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
+next
+  show "Pred\<^sub>\<alpha> \<phi> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
+    by (simp add: Pred\<^sub>\<alpha>_def Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
+qed
 
 text \<open>The following lemmas describe the support of constructed trees modulo $\alpha$-equivalence.
 For~@{term "Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"}, we merely prove that it is finitely supported, provided~@{term t\<^sub>\<alpha>} has
@@ -694,15 +761,12 @@ lemma Tree\<^sub>\<alpha>_induct [case_names Conj\<^sub>\<alpha> Not\<^sub>\<alp
 proof (rule Tree\<^sub>\<alpha>.abs_induct)
   fix t show "P (abs_Tree\<^sub>\<alpha> t)"
     proof (induction t)
-      case (tConj tset) then show ?case
-        using assms(1)
-apply (simp add: Conj\<^sub>\<alpha>_def')
-apply (drule_tac x="map_bset abs_Tree\<^sub>\<alpha> tset" in meta_spec)
-apply (subgoal_tac "abs_Tree\<^sub>\<alpha> (tConj (map_bset rep_Tree\<^sub>\<alpha> (map_bset abs_Tree\<^sub>\<alpha> tset))) = abs_Tree\<^sub>\<alpha> (tConj tset)")
- prefer 2
- apply (metis Conj\<^sub>\<alpha>.abs_eq Conj\<^sub>\<alpha>_def')
-apply (auto simp add: bset.set_map)
-done
+      case (tConj tset)
+        let ?tset\<^sub>\<alpha> = "map_bset abs_Tree\<^sub>\<alpha> tset"
+        have "abs_Tree\<^sub>\<alpha> (tConj tset) = Conj\<^sub>\<alpha> ?tset\<^sub>\<alpha>"
+          by (simp add: Conj\<^sub>\<alpha>.abs_eq)
+        then show ?case
+          using assms(1) tConj.IH by (metis imageE map_bset.rep_eq)
     next
       case tNot then show ?case
         using assms(2) by (metis Not\<^sub>\<alpha>.abs_eq)
@@ -761,11 +825,15 @@ text \<open>@{const hereditarily_fs} is preserved under $\alpha$-renaming.\<clos
 lemma hereditarily_fs_alpha_renaming:
   assumes "Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha>' t\<^sub>\<alpha>'"
   shows "hereditarily_fs t\<^sub>\<alpha> \<longleftrightarrow> hereditarily_fs t\<^sub>\<alpha>'"
-using assms
-apply (auto simp add: Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff alphas)
- apply (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep hereditarily_fs_eqvt permute_Tree\<^sub>\<alpha>.abs_eq)
-apply (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep hereditarily_fs_eqvt permute_Tree\<^sub>\<alpha>.abs_eq permute_minus_cancel(2))
-done
+proof
+  assume "hereditarily_fs t\<^sub>\<alpha>"
+  then show "hereditarily_fs t\<^sub>\<alpha>'"
+    using assms by (auto simp add: Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff alphas) (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep hereditarily_fs_eqvt permute_Tree\<^sub>\<alpha>.abs_eq)
+next
+  assume "hereditarily_fs t\<^sub>\<alpha>'"
+  then show "hereditarily_fs t\<^sub>\<alpha>"
+    using assms by (auto simp add: Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff alphas) (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep hereditarily_fs_eqvt permute_Tree\<^sub>\<alpha>.abs_eq permute_minus_cancel(2))
+qed
 
 text \<open>Hereditarily finitely supported trees have finite support.\<close>
 
@@ -960,14 +1028,25 @@ lemma Tree_free [simp]:
   and "Not x \<noteq> Pred \<phi>"
   and "Not x1 \<noteq> Act \<alpha> x2"
   and "Pred \<phi> \<noteq> Act \<alpha> x"
-apply auto
-     apply (metis Conj_rep_eq Not.rep_eq Tree\<^sub>\<alpha>_free(1))
-    apply (metis Conj_rep_eq Pred.rep_eq Tree\<^sub>\<alpha>_free(2))
-   apply (metis Conj_rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(3))
-  apply (metis Not.rep_eq Pred.rep_eq Tree\<^sub>\<alpha>_free(4))
- apply (metis Not.rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(5))
-apply (metis Pred.rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(6))
-done
+proof -
+  show "finite (supp xset) \<Longrightarrow> Conj xset \<noteq> Not x"
+    by (metis Conj_rep_eq Not.rep_eq Tree\<^sub>\<alpha>_free(1))
+next
+  show "finite (supp xset) \<Longrightarrow> Conj xset \<noteq> Pred \<phi>"
+    by (metis Conj_rep_eq Pred.rep_eq Tree\<^sub>\<alpha>_free(2))
+next
+  show "finite (supp xset) \<Longrightarrow> Conj xset \<noteq> Act \<alpha> x"
+    by (metis Conj_rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(3))
+next
+  show "Not x \<noteq> Pred \<phi>"
+    by (metis Not.rep_eq Pred.rep_eq Tree\<^sub>\<alpha>_free(4))
+next
+  show "Not x1 \<noteq> Act \<alpha> x2"
+    by (metis Not.rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(5))
+next
+  show "Pred \<phi> \<noteq> Act \<alpha> x"
+    by (metis Pred.rep_eq Act.rep_eq Tree\<^sub>\<alpha>_free(6))
+qed
 
 
 subsection \<open>Induction over infinitary formulas\<close>
@@ -986,24 +1065,24 @@ proof (induction x)
     by simp
   then show "P (Abs_formula t\<^sub>\<alpha>)"
     proof (induction t\<^sub>\<alpha>)
-      case (Conj\<^sub>\<alpha> tset\<^sub>\<alpha>)
-        then show ?case
-          using assms(1)
-apply (simp add: Conj_def)
-apply (drule_tac x="map_bset Abs_formula tset\<^sub>\<alpha>" in meta_spec)
-apply (subgoal_tac "map_bset Rep_formula (map_bset Abs_formula tset\<^sub>\<alpha>) = tset\<^sub>\<alpha>")
- apply simp
- apply (drule meta_mp)
-  apply (metis supp_map_bset_Rep_formula)
- apply (erule meta_mp)
- apply (subgoal_tac "Rep_formula x \<in> set_bset tset\<^sub>\<alpha>")
-  apply (metis Rep_formula_inverse)
- apply (auto simp add: bset.set_map)[1]
-apply (simp add: bset.map_comp)
-apply (subgoal_tac "set_bset (map_bset (Rep_formula \<circ> Abs_formula) tset\<^sub>\<alpha>) = set_bset tset\<^sub>\<alpha>")
- apply (metis set_bset_inject)
-apply (auto simp add: bset.set_map image_def)
-done
+      case (Conj\<^sub>\<alpha> tset\<^sub>\<alpha>) show ?case
+        proof -
+          let ?tset = "map_bset Abs_formula tset\<^sub>\<alpha>"
+          have "\<And>t\<^sub>\<alpha>'. t\<^sub>\<alpha>' \<in> set_bset tset\<^sub>\<alpha> \<Longrightarrow> t\<^sub>\<alpha>' = (Rep_formula \<circ> Abs_formula) t\<^sub>\<alpha>'"
+            by (simp add: Conj\<^sub>\<alpha>.hyps)
+          then have "tset\<^sub>\<alpha> = map_bset (Rep_formula \<circ> Abs_formula) tset\<^sub>\<alpha>"
+            by (metis bset.map_cong0 bset.map_id id_apply)
+          then have *: "tset\<^sub>\<alpha> = map_bset Rep_formula ?tset"
+            by (metis bset.map_comp)
+          then have "Abs_formula (Conj\<^sub>\<alpha> tset\<^sub>\<alpha>) = Conj ?tset"
+            by (metis Conj_def)
+          moreover from "*" have "finite (supp ?tset)"
+            using Conj\<^sub>\<alpha>.hyps(1) by (metis supp_map_bset_Rep_formula)
+          moreover have "(\<And>t. t \<in> set_bset ?tset \<Longrightarrow> P t)"
+            using Conj\<^sub>\<alpha>.IH by (metis imageE map_bset.rep_eq)
+          ultimately show ?thesis
+            using assms(1) by metis
+        qed
     next
       case Not\<^sub>\<alpha> then show ?case
         using assms(2) by (metis Formula.Abs_formula_inverse Not.rep_eq Rep_formula_inverse)
@@ -1140,14 +1219,7 @@ qed
 lemma supp_Act\<^sub>\<alpha> [simp]:
   assumes "hereditarily_fs t\<^sub>\<alpha>"
   shows "supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) = supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
-using assms
-apply (subst fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp[symmetric])
- apply (metis Act\<^sub>\<alpha>)
-apply (subgoal_tac "fv_Tree (rep_Tree\<^sub>\<alpha> (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)) = fv_Tree (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>))")
- prefer 2
- apply (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>_abs_rep Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree)
-apply (metis Formula.fv_tAct fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp)
-done
+by (metis (no_types, lifting) Act\<^sub>\<alpha> Act\<^sub>\<alpha>_def fv_tAct Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree assms fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp id_apply map_fun_apply)
 
 lemma supp_Act [simp]: "supp (Act \<alpha> x) = supp \<alpha> \<union> supp x - bn \<alpha>"
 by (metis Act.rep_eq Rep_formula' supp_Act\<^sub>\<alpha> supp_Rep_formula)
@@ -1161,10 +1233,10 @@ lemma formula_strong_induct_aux:
   shows "\<And>(c :: 'd\<Colon>fs) p. P c (p \<bullet> x)"
 proof (induction x)
   case (Conj xset)
-    then moreover have "finite (supp (p \<bullet> xset))"
+    moreover then have "finite (supp (p \<bullet> xset))"
       by (metis permute_finite supp_eqvt)
     moreover have "(\<And>x c. x \<in> set_bset (p \<bullet> xset) \<Longrightarrow> P c x)"
-      by (metis (full_types) Conj.IH eqvt_bound mem_permute_iff set_bset_eqvt)
+      using Conj.IH by (metis (full_types) eqvt_bound mem_permute_iff set_bset_eqvt)
     ultimately show ?case
       using assms(1) by simp
 next
@@ -1174,48 +1246,30 @@ next
   case Pred show ?case
     using assms(3) by simp
 next
-  case (Act \<alpha> x) then show ?case
-    using assms(4)
-apply simp
-apply (subgoal_tac "finite ((supp (p \<bullet> \<alpha>) \<union> supp (p \<bullet> x)) - bn (p \<bullet> \<alpha>))")
- prefer 2
- apply (metis finite_Diff finite_UnI finite_supp)
-apply (subgoal_tac "\<exists>q. (q \<bullet> bn (p \<bullet> \<alpha>)) \<sharp>* c \<and> supp ((supp (p \<bullet> \<alpha>) \<union> supp (p \<bullet> x)) - bn (p \<bullet> \<alpha>)) \<sharp>* q")
- prefer 2
- apply (rule at_set_avoiding2)
-    apply (metis bn_finite)
-   apply (metis finite_supp)
-  apply (metis supp_finite_atom_set)
- apply (metis DiffE fresh_def fresh_star_def supp_finite_atom_set)
-apply (subgoal_tac "supp (supp (p \<bullet> \<alpha>) \<union> supp (p \<bullet> x) - bn (p \<bullet> \<alpha>)) = supp (p \<bullet> \<alpha>) \<union> supp (p \<bullet> x) - bn (p \<bullet> \<alpha>)")
- prefer 2
- apply (metis supp_finite_atom_set)
-apply simp
-apply (thin_tac "supp (supp (p \<bullet> \<alpha>) \<union> supp (p \<bullet> x) - bn (p \<bullet> \<alpha>)) = supp (p \<bullet> \<alpha>) \<union> supp (p \<bullet> x) - bn (p \<bullet> \<alpha>)")
-apply (auto simp add: bn_eqvt)
-apply (drule_tac x="q \<bullet> p \<bullet> \<alpha>" in meta_spec)
-apply (drule_tac x="c" in meta_spec) back
-apply (drule_tac x="q \<bullet> p \<bullet> x" in meta_spec)
-apply (drule meta_mp)
- apply assumption
-apply (drule meta_mp)
- apply (metis permute_plus)
-apply (subgoal_tac "Act (q \<bullet> p \<bullet> \<alpha>) (q \<bullet> p \<bullet> x) = Act (p \<bullet> \<alpha>) (p \<bullet> x)")
- apply simp
-apply (thin_tac "\<And>c p. P c (p \<bullet> x)")
-apply (simp add: Act_eq_iff Act\<^sub>\<alpha>_eq_iff)
-apply (rule_tac x="- q" in exI)
-apply (simp add: alphas fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp bn_eqvt)
-apply (rule context_conjI)
- apply (metis (erased, lifting) Diff_eqvt Un_Diff atom_set_perm_eq bn_eqvt fresh_star_Un supp_eqvt)
-apply (rule conjI)
- apply (metis Un_Diff fresh_minus_perm fresh_star_Un fresh_star_def)
-apply (rule conjI)
- apply (metis (no_types, hide_lams) Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq permute_formula.rep_eq permute_minus_cancel(2))
-apply (rule context_conjI)
- apply (metis (erased, lifting) Diff_eqvt Un_Diff atom_set_perm_eq bn_eqvt fresh_star_Un supp_eqvt)
-apply (metis Un_Diff fresh_minus_perm fresh_star_Un fresh_star_def)
-done
+  case (Act \<alpha> x) show ?case
+  proof -
+    -- \<open>rename~@{term "bn (p \<bullet> \<alpha>)"} to avoid~@{term c}, without touching~@{term "Act (p \<bullet> \<alpha>) (p \<bullet> x)"}\<close>
+    obtain q where 1: "(q \<bullet> bn (p \<bullet> \<alpha>)) \<sharp>* c" and 2: "supp (Act (p \<bullet> \<alpha>) (p \<bullet> x)) \<sharp>* q"
+      proof (rule at_set_avoiding2[of "bn (p \<bullet> \<alpha>)" c "Act (p \<bullet> \<alpha>) (p \<bullet> x)", THEN exE])
+        show "finite (bn (p \<bullet> \<alpha>))" by (fact bn_finite)
+      next
+        show "finite (supp c)" by (fact finite_supp)
+      next
+        show "finite (supp (Act (p \<bullet> \<alpha>) (p \<bullet> x)))" by (simp add: finite_supp)
+      next
+        show "bn (p \<bullet> \<alpha>) \<sharp>* Act (p \<bullet> \<alpha>) (p \<bullet> x)" by (simp add: fresh_def fresh_star_def)
+      qed metis
+    from 1 have "bn (q \<bullet> p \<bullet> \<alpha>) \<sharp>* c"
+      by (simp add: bn_eqvt)
+    moreover from Act.IH have "\<And>c. P c (q \<bullet> p \<bullet> x)"
+      by (metis permute_plus)
+    ultimately have "P c (Act (q \<bullet> p \<bullet> \<alpha>) (q \<bullet> p \<bullet> x))"
+      using assms(4) by simp
+    moreover from 2 have "Act (q \<bullet> p \<bullet> \<alpha>) (q \<bullet> p \<bullet> x) = Act (p \<bullet> \<alpha>) (p \<bullet> x)"
+      using supp_perm_eq by fastforce
+    ultimately show ?thesis
+      by simp
+  qed
 qed
 
 lemmas formula_strong_induct = formula_strong_induct_aux[where p=0, simplified]
