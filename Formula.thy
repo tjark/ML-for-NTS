@@ -282,98 +282,144 @@ lemma
   shows alpha_Tree_eqvt': "t1 =\<^sub>\<alpha> t2 \<longleftrightarrow> p \<bullet> t1 =\<^sub>\<alpha> p \<bullet> t2"
   and fv_Tree_eqvt [eqvt]: "p \<bullet> fv_Tree t = fv_Tree (p \<bullet> t)"
 proof (induction t1 t2 and t rule: alpha_Tree_fv_Tree_induct)
-  case alpha_tConj then show ?case
-apply simp
-apply transfer
-apply (rule iffI)
--- \<open> (1) \<close>
- apply (rule rel_setI)
-  apply (subgoal_tac "-p \<bullet> x \<in> tset1")
-   prefer 2
-   apply (metis mem_permute_iff permute_minus_cancel(1))
-  apply (drule rel_setD1)
-   apply assumption
-  apply clarify
-  apply (rule_tac x="p \<bullet> y" in bexI)
-   apply (metis permute_minus_cancel(1))
-  apply (metis mem_permute_iff)
- apply (subgoal_tac "-p \<bullet> y \<in> tset2")
-  prefer 2
-  apply (metis mem_permute_iff permute_minus_cancel(1))
- apply (drule rel_setD2)
-  apply assumption
- apply clarify
- apply (rule_tac x="p \<bullet> x" in bexI)
-  apply (metis permute_minus_cancel(1))
- apply (metis mem_permute_iff)
--- \<open> (2) \<close>
-apply (rule rel_setI)
- apply (subgoal_tac "p \<bullet> x \<in> p \<bullet> tset1")
-  prefer 2
-  apply (metis mem_permute_iff)
- apply (drule rel_setD1)
-  apply assumption
- apply clarify
- apply (rule_tac x="-p \<bullet> y" in bexI)
-  apply (metis (no_types, lifting) mem_permute_iff permute_minus_cancel(1))
- apply (metis mem_permute_iff permute_minus_cancel(1))
-apply (subgoal_tac "p \<bullet> y \<in> p \<bullet> tset2")
- prefer 2
- apply (metis mem_permute_iff)
-apply (drule rel_setD2)
- apply assumption
-apply clarify
-apply (rule_tac x="-p \<bullet> x" in bexI)
- apply (metis (no_types, lifting) mem_permute_iff permute_minus_cancel(1))
-apply (metis mem_permute_iff permute_minus_cancel(1))
-done
+  case (alpha_tConj tset1 tset2) show ?case
+  proof
+    assume *: "tConj tset1 =\<^sub>\<alpha> tConj tset2"
+    {
+      fix x
+      assume "x \<in> set_bset (p \<bullet> tset1)"
+      then obtain x' where 1: "x' \<in> set_bset tset1" and 2: "x = p \<bullet> x'"
+        by (metis imageE permute_bset.rep_eq permute_set_eq_image)
+      from 1 obtain y' where 3: "y' \<in> set_bset tset2" and 4: "x' =\<^sub>\<alpha> y'"
+        using "*" by (metis (mono_tags, lifting) Formula.alpha_tConj rel_bset.rep_eq rel_set_def)
+      from 3 have "p \<bullet> y' \<in> set_bset (p \<bullet> tset2)"
+        by (metis mem_permute_iff set_bset_eqvt)
+      moreover from 1 and 2 and 3 and 4 have "x =\<^sub>\<alpha> p \<bullet> y'"
+        using alpha_tConj.IH by blast
+      ultimately have "\<exists>y\<in>set_bset (p \<bullet> tset2). x =\<^sub>\<alpha> y" ..
+    }
+    moreover
+    {
+      fix y
+      assume "y \<in> set_bset (p \<bullet> tset2)"
+      then obtain y' where 1: "y' \<in> set_bset tset2" and 2: "p \<bullet> y' = y"
+        by (metis imageE permute_bset.rep_eq permute_set_eq_image)
+      from 1 obtain x' where 3: "x' \<in> set_bset tset1" and 4: "x' =\<^sub>\<alpha> y'"
+        using "*" by (metis (mono_tags, lifting) Formula.alpha_tConj rel_bset.rep_eq rel_set_def)
+      from 3 have "p \<bullet> x' \<in> set_bset (p \<bullet> tset1)"
+        by (metis mem_permute_iff set_bset_eqvt)
+      moreover from 1 and 2 and 3 and 4 have "p \<bullet> x' =\<^sub>\<alpha> y"
+        using alpha_tConj.IH by blast
+      ultimately have "\<exists>x\<in>set_bset (p \<bullet> tset1). x =\<^sub>\<alpha> y" ..
+    }
+    ultimately show "p \<bullet> tConj tset1 =\<^sub>\<alpha> p \<bullet> tConj tset2"
+      by (simp add: rel_bset_def rel_set_def)
+  next
+    assume *: "p \<bullet> tConj tset1 =\<^sub>\<alpha> p \<bullet> tConj tset2"
+    {
+      fix x
+      assume 1: "x \<in> set_bset tset1"
+      then have "p \<bullet> x \<in> set_bset (p \<bullet> tset1)"
+        by (metis mem_permute_iff set_bset_eqvt)
+      then obtain y' where 2: "y' \<in> set_bset (p \<bullet> tset2)" and 3: "p \<bullet> x =\<^sub>\<alpha> y'"
+        using "*" by (metis Formula.alpha_tConj permute_Tree_tConj rel_bset.rep_eq rel_set_def)
+      from 2 obtain y where 4: "y \<in> set_bset tset2" and 5: "y' = p \<bullet> y"
+        by (metis imageE permute_bset.rep_eq permute_set_eq_image)
+      from 1 and 3 and 4 and 5 have "x =\<^sub>\<alpha> y"
+        using alpha_tConj.IH by blast
+      with 4 have "\<exists>y\<in>set_bset tset2. x =\<^sub>\<alpha> y" ..
+    }
+    moreover
+    {
+      fix y
+      assume 1: "y \<in> set_bset tset2"
+      then have "p \<bullet> y \<in> set_bset (p \<bullet> tset2)"
+        by (metis mem_permute_iff set_bset_eqvt)
+      then obtain x' where 2: "x' \<in> set_bset (p \<bullet> tset1)" and 3: "x' =\<^sub>\<alpha> p \<bullet> y"
+        using "*" by (metis Formula.alpha_tConj permute_Tree_tConj rel_bset.rep_eq rel_set_def)
+      from 2 obtain x where 4: "x \<in> set_bset tset1" and 5: "p \<bullet> x = x'"
+        by (metis imageE permute_bset.rep_eq permute_set_eq_image)
+      from 1 and 3 and 4 and 5 have "x =\<^sub>\<alpha> y"
+        using alpha_tConj.IH by blast
+      with 4 have "\<exists>x\<in>set_bset tset1. x =\<^sub>\<alpha> y" ..
+    }
+    ultimately show "tConj tset1 =\<^sub>\<alpha> tConj tset2"
+      by (simp add: rel_bset_def rel_set_def)
+  qed
 next
-  case alpha_tAct then show ?case
-apply auto
--- \<open> (1) \<close>
- apply (rule_tac x="p + pa - p" in exI)
- apply (simp add: alpha_set)
- apply clarsimp
- apply (rule conjI)
-   apply (metis (no_types, hide_lams) Diff_eqvt bn_eqvt)
-  apply (smt Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
--- \<open> (2) \<close>
-apply (rule_tac x="-p + pa + p" in exI)
-apply (simp add: alpha_set)
-apply clarsimp
-apply (rule conjI)
- apply (metis Diff_eqvt bn_eqvt permute_eq_iff)
-apply auto
-          apply (metis (erased, hide_lams) Diff_eqvt bn_eqvt diff_add_cancel diff_conv_add_uminus fresh_star_permute_iff permute_minus_cancel(1) permute_perm_def)
-         apply (metis (erased, hide_lams) permute_eqvt permute_minus_cancel(1))
-        apply (metis bn_eqvt permute_minus_cancel(2))
-       apply (metis bn_eqvt permute_minus_cancel(2))
-      apply (metis (no_types) Diff_eqvt Diff_iff bn_eqvt permute_minus_cancel(2) supp_eqvt)
-     apply (metis (no_types) Diff_eqvt Diff_iff bn_eqvt permute_minus_cancel(2) supp_eqvt)
-    apply (metis (no_types) Diff_eqvt Diff_iff bn_eqvt permute_minus_cancel(2) supp_eqvt)
-   apply (metis (no_types) Diff_eqvt Diff_iff bn_eqvt permute_minus_cancel(2) supp_eqvt)
-  apply (metis (erased, hide_lams) Diff_eqvt bn_eqvt diff_minus_eq_add fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
- apply (metis bn_eqvt permute_minus_cancel(2))
-apply (metis bn_eqvt permute_minus_cancel(2))
-done
+  case (alpha_tAct \<alpha>1 t1 \<alpha>2 t2) show ?case
+  proof
+    assume "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
+    then obtain q where 1: "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree q (bn \<alpha>2, t2)" and 2: "(bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp q (bn \<alpha>2, \<alpha>2)"
+      by auto
+    from 1 have "(bn (p \<bullet> \<alpha>1), p \<bullet> t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (p + q - p) (bn (p \<bullet> \<alpha>2), p \<bullet> t2)"
+      using alpha_tAct.IH by (simp add: alpha_set) (metis (mono_tags, lifting) Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def)
+    moreover from 2 have "(bn (p \<bullet> \<alpha>1), p \<bullet> \<alpha>1) \<approx>set (op =) supp (p + q - p) (bn (p \<bullet> \<alpha>2), p \<bullet> \<alpha>2)"
+      by (simp add: alpha_set) (metis (mono_tags, lifting) Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
+    ultimately show "p \<bullet> tAct \<alpha>1 t1 =\<^sub>\<alpha> p \<bullet> tAct \<alpha>2 t2"
+      by auto
+  next
+    assume "p \<bullet> tAct \<alpha>1 t1 =\<^sub>\<alpha> p \<bullet> tAct \<alpha>2 t2"
+    then obtain q where 1: "(bn (p \<bullet> \<alpha>1), p \<bullet> t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree q (bn (p \<bullet> \<alpha>2), p \<bullet> t2)" and 2: "(bn (p \<bullet> \<alpha>1), p \<bullet> \<alpha>1) \<approx>set (op =) supp q (bn (p \<bullet> \<alpha>2), p \<bullet> \<alpha>2)"
+      by auto
+    {
+      from 1 have "fv_Tree t1 - bn \<alpha>1 = fv_Tree t2 - bn \<alpha>2"
+        using alpha_tAct.IH(2) alpha_tAct.IH(3) by (metis (no_types, lifting) Diff_eqvt alpha_set bn_eqvt permute_eq_iff)
+      moreover with 1 have "(fv_Tree t1 - bn \<alpha>1) \<sharp>* (- p + q + p)"
+        using alpha_tAct.IH(3) by (auto simp add: fresh_star_def fresh_perm alphas) (metis (no_types, lifting) DiffI bn_eqvt mem_permute_iff permute_minus_cancel(2))
+      moreover from 1 have "- p \<bullet> q \<bullet> p \<bullet> t1 =\<^sub>\<alpha> t2"
+        using alpha_tAct.IH(1) by (simp add: alpha_set) (metis (no_types, lifting) permute_eqvt permute_minus_cancel(2))
+      moreover from 1 have "- p \<bullet> q \<bullet> p \<bullet> bn \<alpha>1 = bn \<alpha>2"
+        by (metis alpha_set bn_eqvt permute_minus_cancel(2))
+      ultimately have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (-p + q + p) (bn \<alpha>2, t2)"
+        by (simp add: alpha_set)
+    }
+    moreover
+    {
+      from 2 have "supp \<alpha>1 - bn \<alpha>1 = supp \<alpha>2 - bn \<alpha>2"
+        by (metis (no_types, lifting) Diff_eqvt alpha_set bn_eqvt permute_eq_iff supp_eqvt)
+      moreover with 2 have "(supp \<alpha>1 - bn \<alpha>1) \<sharp>* (-p + q + p)"
+        by (auto simp add: fresh_star_def fresh_perm alphas) (metis (no_types, lifting) DiffI bn_eqvt mem_permute_iff permute_minus_cancel(1) supp_eqvt)
+      moreover from 2 have "-p \<bullet> q \<bullet> p \<bullet> \<alpha>1 = \<alpha>2"
+        by (simp add: alpha_set)
+      moreover have "-p \<bullet> q \<bullet> p \<bullet> bn \<alpha>1 = bn \<alpha>2"
+        by (simp add: bn_eqvt calculation(3))
+      ultimately have "(bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp (-p + q + p) (bn \<alpha>2, \<alpha>2)"
+        by (simp add: alpha_set)
+    }
+    ultimately show "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
+      by auto
+  qed
 next
-  case (fv_tConj tset) then show ?case
-apply (simp add: Supp_def)
-apply (subgoal_tac "\<And>a. infinite {b. \<not> rel_bset op =\<^sub>\<alpha> ((a \<rightleftharpoons> b) \<bullet> tset) tset} = infinite {b. \<not> rel_bset op =\<^sub>\<alpha> (((p \<bullet> a) \<rightleftharpoons> b) \<bullet> p \<bullet> tset) (p \<bullet> tset)}")
- apply (auto simp add: permute_set_def)[1]
- apply (metis eqvt_bound)
-apply auto
- apply (rule inj_on_finite[where f="unpermute p"])
-   prefer 3 apply assumption
-  apply (metis (no_types, lifting) inj_on_def permute_eq_iff unpermute_def)
- apply auto[1]
- apply (metis (erased, lifting) eqvt_bound permute_eqvt swap_eqvt)
-apply (rule inj_on_finite[where f="permute p"])
-  prefer 3 apply assumption
- apply (metis (no_types, lifting) inj_on_def permute_eq_iff)
-apply auto
-apply (metis permute_eqvt swap_eqvt)
-done
+  case (fv_tConj tset)
+  {
+    fix a
+    let ?B = "{b. \<not> rel_bset (op =\<^sub>\<alpha>) ((a \<rightleftharpoons> b) \<bullet> tset) tset}"
+    let ?pB = "{b. \<not> rel_bset (op =\<^sub>\<alpha>) ((p \<bullet> a \<rightleftharpoons> b) \<bullet> p \<bullet> tset) (p \<bullet> tset)}"
+    {
+      assume "finite ?B"
+      moreover have "inj_on (unpermute p) ?pB"
+        by (simp add: inj_on_def unpermute_def)
+      moreover have "unpermute p ` ?pB \<subseteq> ?B"
+        using fv_tConj.IH by auto (metis (erased, lifting) eqvt_bound permute_eqvt swap_eqvt)
+      ultimately have "finite ?pB"
+        by (metis inj_on_finite)
+    }
+    moreover
+    {
+      assume "finite ?pB"
+      moreover have "inj_on (permute p) ?B"
+        by (simp add: inj_on_def)
+      moreover have "permute p ` ?B \<subseteq> ?pB"
+        using fv_tConj.IH by auto (metis (erased, lifting) permute_eqvt swap_eqvt)
+      ultimately have "finite ?B"
+        by (metis inj_on_finite)
+    }
+    ultimately have "infinite ?B \<longleftrightarrow> infinite ?pB"
+      by auto
+  }
+  then show ?case
+    by (auto simp add: Supp_def permute_set_def) (metis eqvt_bound)
 next
   case fv_tAct then show ?case
     by (simp add: bn_eqvt Diff_eqvt union_eqvt)
@@ -477,13 +523,13 @@ proof (rule transpI)
       have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (q + p) (bn \<alpha>, t)"
         proof -
           have "fv_Tree t1 - bn \<alpha>1 = fv_Tree t - bn \<alpha>"
-            using 1 and 2 by (metis alpha_set.simps)
+            using 1 and 2 by (metis alpha_set)
           moreover have "(fv_Tree t1 - bn \<alpha>1) \<sharp>* (q + p)"
-            using 1 and 2 by (metis alpha_set.simps fresh_star_plus)
+            using 1 and 2 by (metis alpha_set fresh_star_plus)
           moreover have "(q + p) \<bullet> t1 =\<^sub>\<alpha> t"
-            using 1 and 2 and tAct.IH by (metis (no_types, lifting) alpha_Tree_eqvt alpha_set.simps permute_minus_cancel(1) permute_plus)
+            using 1 and 2 and tAct.IH by (metis (no_types, lifting) alpha_Tree_eqvt alpha_set permute_minus_cancel(1) permute_plus)
           moreover have "(q + p) \<bullet> bn \<alpha>1 = bn \<alpha>"
-            using 1 and 2 by (metis alpha_set.simps permute_plus)
+            using 1 and 2 by (metis alpha_set permute_plus)
           ultimately show ?thesis
             by (metis alpha_set)
         qed
