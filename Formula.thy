@@ -1126,94 +1126,123 @@ next
   case Pred\<^sub>\<alpha> show ?case
     by (metis Pred\<^sub>\<alpha>.abs_eq fv_tPred Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_Pred\<^sub>\<alpha>)
 next
-  case (Act\<^sub>\<alpha> t\<^sub>\<alpha> \<alpha>) then show ?case
-apply (subgoal_tac "fv_Tree (rep_Tree\<^sub>\<alpha> (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)) = fv_Tree (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>))")
- prefer 2
- apply (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree_fv_Tree)
-apply simp
-apply (drule hereditarily_fs_implies_finite_supp)
-apply auto
--- \<open>4 subgoals\<close>
-   apply (subgoal_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>}")
-    prefer 2
-    apply (simp add: supp_def)
-   apply (subgoal_tac "infinite ({b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>)")
-    prefer 2
-    apply (metis Diff_infinite_finite finite_supp)
-   apply (thin_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>}")
-   apply (subst supp_def)
-   apply (rule CollectI)
-   apply (erule infinite_mono)
-   apply (rename_tac b)
-   apply (clarsimp simp add: Act\<^sub>\<alpha>_eq_iff)
-   apply (thin_tac "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) \<approx>set op =\<^sub>\<alpha> fv_Tree p (bn \<alpha>, rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)")
-   apply (auto simp add: alphas_abs alphas)[1]
-   apply (smt Diff_eqvt Diff_iff bn_eqvt permute_zero supp_eqvt swap_different_sorts swap_set_in)
--- \<open>3 subgoals\<close>
-  apply (subgoal_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>}")
-   prefer 2
-   apply (simp add: supp_def)
-  apply (subgoal_tac "infinite ({b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>} - supp t\<^sub>\<alpha>)")
-   prefer 2
-   apply (metis Diff_infinite_finite)
-  apply (thin_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>}")
-  apply (subst supp_def)
-  apply (rule CollectI)
-  apply (erule infinite_mono)
-  apply (rename_tac b)
-  apply (clarsimp simp add: Act\<^sub>\<alpha>_eq_iff)
-  apply (thin_tac "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), (x \<rightleftharpoons> b) \<bullet> \<alpha>) \<approx>set (op =) supp p (bn \<alpha>, \<alpha>)")
-  apply (auto simp add: alphas)[1]
-  apply (subgoal_tac "fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) = (x \<rightleftharpoons> b) \<bullet> fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)")
-   prefer 2
-   apply (metis alpha_Tree_fv_Tree alpha_Tree_permute_rep_commute fv_Tree_eqvt)
-  apply (metis DiffD1 DiffI mem_permute_iff permute_zero swap_atom swap_different_sorts)
--- \<open>2 subgoals\<close>
- apply (subgoal_tac "supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) \<subseteq> supp \<alpha> \<union> supp t\<^sub>\<alpha>")
-  apply blast
- apply (subgoal_tac "(supp \<alpha> \<union> supp t\<^sub>\<alpha>) supports Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>")
-  apply (metis finite_UnI finite_supp supp_is_subset)
- apply (simp add: supports_def)
- apply (metis fresh_def swap_fresh_fresh)
--- \<open>1 subgoal\<close>
-apply (subgoal_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}")
- prefer 2
- apply (simp add: supp_def)
-apply (subgoal_tac "infinite ({b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>} - supp \<alpha> - supp t\<^sub>\<alpha>)")
- prefer 2
- apply (metis Diff_infinite_finite finite_supp)
-apply (thin_tac "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}")
-apply (subgoal_tac "\<exists>b. b \<in> {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>} - supp \<alpha> - supp t\<^sub>\<alpha>")
- prefer 2
- apply (metis infinite_mono)
-apply (thin_tac "infinite ({b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>} - supp \<alpha> - supp t\<^sub>\<alpha>)")
-apply (auto simp add: Act\<^sub>\<alpha>_eq_iff)
-apply (drule_tac x="(x \<rightleftharpoons> b)" in spec)
-apply auto
- prefer 2
- apply (erule notE) back back
- apply (simp add: alphas)
- apply (rule context_conjI)
-  apply (metis (erased, hide_lams) Diff_eqvt Diff_iff bn_eqvt supp_eqvt swap_set_not_in)
- apply (rule conjI)
-  apply (metis DiffD2 Diff_subset contra_subsetD fresh_perm fresh_star_def swap_atom)
- apply (metis bn_eqvt permute_swap_cancel)
-apply (erule notE) back back
-apply (simp add: alphas)
-apply (subgoal_tac "supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = supp \<alpha> - bn \<alpha>")
- prefer 2
- apply (metis (erased, hide_lams) Diff_eqvt Diff_iff bn_eqvt supp_eqvt swap_set_not_in)
-apply (rule context_conjI)
- apply (subgoal_tac "fv_Tree ((x \<rightleftharpoons> b) \<bullet> rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) = fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>))")
-  prefer 2
-  apply (metis alpha_Tree_fv_Tree alpha_Tree_permute_rep_commute)
- apply (metis (mono_tags, hide_lams) Diff_eqvt Diff_iff bn_eqvt fv_Tree_eqvt swap_set_not_in)
-apply (rule conjI)
- apply (metis DiffD2 Diff_subset contra_subsetD fresh_perm fresh_star_def swap_atom)
-apply (rule conjI)
- apply (metis alpha_Tree_permute_rep_commute permute_swap_cancel)
-apply (metis bn_eqvt permute_swap_cancel)
-done
+  case (Act\<^sub>\<alpha> t\<^sub>\<alpha> \<alpha>)
+  have "fv_Tree (rep_Tree\<^sub>\<alpha> (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)) = fv_Tree (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>))"
+    by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>_abs_rep Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree)
+  also have "\<dots> = supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
+    using Act\<^sub>\<alpha>.IH by simp
+  also have "\<dots> = supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+    proof
+      show "supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha> \<subseteq> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+      proof
+        fix x
+        assume "x \<in> supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
+        moreover
+        {
+          assume x1: "x \<in> supp \<alpha>" and x2: "x \<notin> bn \<alpha>"
+          from x1 have "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>}"
+            unfolding supp_def ..
+          then have "infinite ({b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>)"
+            by (simp add: finite_supp)
+          moreover 
+          {
+            fix b
+            assume "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>"
+            then have b1: "(x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>" and b2: "b \<notin> supp \<alpha> - bn \<alpha>"
+              by simp+
+            from b1 have "sort_of x = sort_of b"
+              using swap_different_sorts by fastforce
+            then have "(x \<rightleftharpoons> b) \<bullet> (supp \<alpha> - bn \<alpha>) \<noteq> supp \<alpha> - bn \<alpha>"
+              using b2 x1 x2 by (simp add: swap_set_in)
+            then have "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
+              by (auto simp add: Act\<^sub>\<alpha>_eq_iff alphas Diff_eqvt bn_eqvt)
+          }
+          ultimately have "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
+            by (rule infinite_mono)
+          then have "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+            unfolding supp_def ..
+        }
+        moreover
+        {
+          assume x1: "x \<in> supp t\<^sub>\<alpha>" and x2: "x \<notin> bn \<alpha>"
+          from x1 have "infinite {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>}"
+            unfolding supp_def ..
+          then have "infinite ({b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>} - supp t\<^sub>\<alpha>)"
+            using Act\<^sub>\<alpha>.hyps by (simp add: hereditarily_fs_implies_finite_supp)
+          moreover
+          {
+            fix b
+            assume "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>} - supp t\<^sub>\<alpha>"
+            then have b1: "(x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>" and b2: "b \<notin> supp t\<^sub>\<alpha> - bn \<alpha>"
+              by simp+
+            from b1 have "sort_of x = sort_of b"
+              using swap_different_sorts by fastforce
+            then have "(x \<rightleftharpoons> b) \<bullet> (supp t\<^sub>\<alpha> - bn \<alpha>) \<noteq> supp t\<^sub>\<alpha> - bn \<alpha>"
+              using b2 x1 x2 by (simp add: swap_set_in)
+            then have "fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) \<noteq> fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) - bn \<alpha>"
+              using Act\<^sub>\<alpha>.IH by (metis (no_types, lifting) Diff_eqvt alpha_Tree_fv_Tree alpha_Tree_permute_rep_commute bn_eqvt fv_Tree_eqvt)
+            then have "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
+              by (auto simp add: Act\<^sub>\<alpha>_eq_iff alphas)
+          }
+          ultimately have "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
+            by (rule infinite_mono)
+          then have "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+            unfolding supp_def ..
+        }
+        ultimately show "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+          by auto
+      qed
+    next
+      have "(supp \<alpha> \<union> supp t\<^sub>\<alpha>) supports Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
+        by (simp add: supports_def) (metis fresh_def swap_fresh_fresh)
+      moreover
+      {
+        fix x
+        assume x: "x \<in> bn \<alpha>"
+        have "x \<notin> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+          proof
+            assume "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
+            then have "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
+              unfolding supp_def ..
+            then obtain b where b1: "(x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>" and b2: "b \<notin> supp \<alpha>" and b3: "b \<notin> supp t\<^sub>\<alpha>"
+              using Act\<^sub>\<alpha>.hyps by (metis (mono_tags, lifting) UnCI finite_UnI finite_supp hereditarily_fs_implies_finite_supp infinite_mono mem_Collect_eq)
+            let ?p = "(x \<rightleftharpoons> b)"
+            {
+              have "fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = (x \<rightleftharpoons> b) \<bullet> (fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) - bn \<alpha>)"
+                using Diff_eqvt alpha_Tree_fv_Tree alpha_Tree_permute_rep_commute bn_eqvt fv_Tree_eqvt by blast
+              also have "\<dots> = fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) - bn \<alpha>"
+                using Act\<^sub>\<alpha>.IH and x and b3 by (simp add: swap_set_not_in)
+              moreover have "(fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>)) \<sharp>* ?p"
+                using calculation and Act\<^sub>\<alpha>.IH and x and b3 by (metis DiffD1 DiffD2 fresh_perm fresh_star_def swap_atom_simps(3))
+              moreover have "?p \<bullet> rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>) =\<^sub>\<alpha> rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>"
+                by (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq permute_swap_cancel)
+              moreover have "?p \<bullet> bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = bn \<alpha>"
+                by (simp add: bn_eqvt)
+              ultimately have "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) \<approx>set (op =\<^sub>\<alpha>) fv_Tree ?p (bn \<alpha>, rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)"
+                by (simp add: alphas)
+            }
+            moreover
+            {
+              have "supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = supp \<alpha> - bn \<alpha>"
+                using x and b2 by (metis (no_types, lifting) Abs_swap1(1) DiffD1 DiffD2 bn_eqvt supp_Abs(1))
+              moreover have "(supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>)) \<sharp>* ?p"
+                using calculation and x and b2 by (metis DiffD1 DiffD2 fresh_perm fresh_star_def swap_atom_simps(3))
+              moreover have "?p \<bullet> (x \<rightleftharpoons> b) \<bullet> \<alpha> = \<alpha>"
+                by simp
+              moreover have "?p \<bullet> bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = bn \<alpha>"
+                by (simp add: bn_eqvt)
+              ultimately have "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), (x \<rightleftharpoons> b) \<bullet> \<alpha>) \<approx>set (op =) supp ?p (bn \<alpha>, \<alpha>)"
+                by (simp add: alphas)
+            }
+            ultimately have "(x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
+              by (auto simp add: Act\<^sub>\<alpha>_eq_iff)
+            with b1 show False ..
+          qed
+      }
+      ultimately show "supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) \<subseteq> supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
+        using Act\<^sub>\<alpha>.hyps by (meson DiffI finite_UnI finite_supp hereditarily_fs_implies_finite_supp rev_subsetD subsetCI supp_is_subset)
+    qed
+  finally show ?case .
 qed
 
 lemma supp_Act\<^sub>\<alpha> [simp]:
