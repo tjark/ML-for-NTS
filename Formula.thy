@@ -136,18 +136,16 @@ unfolding supp_def by (simp add: Collect_imp_eq Collect_neg_eq)
 subsection \<open>Trees modulo \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
 
 text \<open>We generalize the notion of support, which considers whether a permuted element is
-\emph{equal} to itself, to arbitrary endorelations.\<close>
+\emph{equal} to itself, to arbitrary endorelations. This is available as @{const supp_rel} in
+Nominal Isabelle.\<close>
 
-definition Supp :: "('a\<Colon>pt \<Rightarrow> 'a \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> atom set" where
-  "Supp R x = {a. infinite {b. \<not> R ((a \<rightleftharpoons> b) \<bullet> x) x}}"
+lemma supp_rel_eqvt [eqvt]:
+  "p \<bullet> supp_rel R x = supp_rel (p \<bullet> R) (p \<bullet> x)"
+by (simp add: supp_rel_def)
 
-lemma Supp_eqvt [eqvt]:
-  "p \<bullet> Supp R x = Supp (p \<bullet> R) (p \<bullet> x)"
-by (simp add: Supp_def)
-
-text \<open>Usually, the definition of $\alpha$-equivalence presupposes a notion of free variables. Here, to
-obtain the correct notion of free variables for infinitary conjunctions, we define $\alpha$-equivalence and
-free variables via mutual recursion.
+text \<open>Usually, the definition of $\alpha$-equivalence presupposes a notion of free variables. Here,
+to obtain the correct notion of free variables for infinitary conjunctions, we define
+$\alpha$-equivalence and free variables via mutual recursion.
 
 I conjecture that the concept of ``free variables'' is not needed at all: we could directly use the
 support modulo $\alpha$-equivalence instead. Working out the details (which might simplify the mutually
@@ -156,9 +154,9 @@ recursive definition below) is left for another time.\<close>
 text \<open>The following lemmas and constructions are used to prove termination of our mutually recursive
 definition.\<close>
 
-lemma Supp_cong [fundef_cong]:
-  "\<lbrakk> x=x'; \<And>a b. R ((a \<rightleftharpoons> b) \<bullet> x') x' \<longleftrightarrow> R' ((a \<rightleftharpoons> b) \<bullet> x') x' \<rbrakk> \<Longrightarrow> Supp R x = Supp R' x'"
-by (simp add: Supp_def)
+lemma supp_rel_cong [fundef_cong]:
+  "\<lbrakk> x=x'; \<And>a b. R ((a \<rightleftharpoons> b) \<bullet> x') x' \<longleftrightarrow> R' ((a \<rightleftharpoons> b) \<bullet> x') x' \<rbrakk> \<Longrightarrow> supp_rel R x = supp_rel R' x'"
+by (simp add: supp_rel_def)
 
 lemma rel_bset_cong [fundef_cong]:
   "\<lbrakk> x=x'; y=y'; \<And>a b. a \<in> set_bset x' \<Longrightarrow> b \<in> set_bset y' \<Longrightarrow> R a b \<longleftrightarrow> R' a b \<rbrakk> \<Longrightarrow> rel_bset R x y \<longleftrightarrow> rel_bset R' x' y'"
@@ -241,7 +239,7 @@ function (sequential)
 | alpha_other: "_ =\<^sub>\<alpha> _ \<longleftrightarrow> False"
 -- \<open>@{const fv_Tree}\<close>
 -- \<open>the free variables in a conjunction are the support of its $\alpha$-equivalence class\<close>
-| fv_tConj: "fv_Tree (tConj tset) = Supp alpha_Tree (tConj tset)"
+| fv_tConj: "fv_Tree (tConj tset) = supp_rel alpha_Tree (tConj tset)"
 | fv_tNot: "fv_Tree (tNot t) = fv_Tree t"
 | fv_tPred: "fv_Tree (tPred \<phi>) = supp \<phi>"
 | fv_tAct: "fv_Tree (tAct \<alpha> t) = (supp \<alpha> \<union> fv_Tree t) - bn \<alpha>"
@@ -419,7 +417,7 @@ next
       by auto
   }
   then show ?case
-    by (auto simp add: Supp_def permute_set_def) (metis eqvt_bound)
+    by (auto simp add: supp_rel_def permute_set_def) (metis eqvt_bound)
 next
   case fv_tAct then show ?case
     by (simp add: bn_eqvt Diff_eqvt union_eqvt)
@@ -561,7 +559,7 @@ using assms proof (induction rule: alpha_Tree_induct)
       by (rule iffI) (metis "*" alpha_Tree_transp rel_bset_transp sym tConj.hyps transpE)+
   }
   then show ?case
-    by (simp add: Supp_def)
+    by (simp add: supp_rel_def)
 next
   case tAct then show ?case
     by (clarsimp simp add: alphas alphas_abs) (metis Un_Diff)
@@ -1147,8 +1145,8 @@ subsection \<open>Strong induction over infinitary formulas\<close>
 text \<open>The following lemmas are needed to prove strong induction. Nonetheless, they should perhaps be
 moved to earlier sections.\<close>
 
-lemma supp_abs_Tree\<^sub>\<alpha>_eq_Supp_alpha_Tree: "supp (abs_Tree\<^sub>\<alpha> t) = Supp (op =\<^sub>\<alpha>) t"
-by (simp add: Supp_def supp_def Tree\<^sub>\<alpha>.abs_eq_iff)
+lemma supp_abs_Tree\<^sub>\<alpha>_eq_supp_rel_alpha_Tree: "supp (abs_Tree\<^sub>\<alpha> t) = supp_rel (op =\<^sub>\<alpha>) t"
+by (simp add: supp_rel_def supp_def Tree\<^sub>\<alpha>.abs_eq_iff)
 
 lemma Act_eq_iff: "Act \<alpha>1 x1 = Act \<alpha>2 x2 \<longleftrightarrow> Act\<^sub>\<alpha> \<alpha>1 (Rep_formula x1) = Act\<^sub>\<alpha> \<alpha>2 (Rep_formula x2)"
 by (metis Act.rep_eq Rep_formula_inverse)
@@ -1164,7 +1162,7 @@ lemma fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp:
   shows "fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) = supp t\<^sub>\<alpha>"
 using assms proof (induction rule: hereditarily_fs.induct)
   case Conj\<^sub>\<alpha> then show ?case
-    by (metis Conj\<^sub>\<alpha>_def' fv_tConj Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_abs_Tree\<^sub>\<alpha>_eq_Supp_alpha_Tree)
+    by (metis Conj\<^sub>\<alpha>_def' fv_tConj Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_abs_Tree\<^sub>\<alpha>_eq_supp_rel_alpha_Tree)
 next
   case Not\<^sub>\<alpha> then show ?case
     by (metis Not\<^sub>\<alpha>.abs_eq fv_tNot Tree\<^sub>\<alpha>_abs_rep Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_Not\<^sub>\<alpha>)
