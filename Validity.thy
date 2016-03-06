@@ -353,8 +353,7 @@ begin
       by (metis valid_Act_strong)
 
     from alpha obtain p where p_\<alpha>: "\<alpha>' = p \<bullet> \<alpha>" and p_x: "x' = p \<bullet> x" and fresh_p: "supp (Act \<alpha> x) \<sharp>* p"
-      by (auto simp add: bn_eqvt Act_eq_iff Act\<^sub>\<alpha>_eq_iff alphas fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp)
-        (metis Rep_formula_inverse Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep Un_Diff alpha_Tree_permute_rep_commute fresh_star_Un permute_formula.rep_eq)
+      by (auto simp add: bn_eqvt Act_eq_iff Act\<^sub>\<alpha>_eq_iff alpha_set) (metis Rep_formula_inverse Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep Un_Diff fresh_star_Un permute_Tree\<^sub>\<alpha>.abs_eq permute_formula.rep_eq supp_Rep_formula supp_alpha_supp_rel)
 
     obtain q where q_p: "\<forall>b\<in>bn \<alpha>. q \<bullet> b = p \<bullet> b" and supp_q: "supp q \<subseteq> bn \<alpha> \<union> p \<bullet> bn \<alpha>"
       by (metis set_renaming_perm2)

@@ -143,16 +143,21 @@ lemma supp_rel_eqvt [eqvt]:
   "p \<bullet> supp_rel R x = supp_rel (p \<bullet> R) (p \<bullet> x)"
 by (simp add: supp_rel_def)
 
-text \<open>Usually, the definition of $\alpha$-equivalence presupposes a notion of free variables. Here,
-to obtain the correct notion of free variables for infinitary conjunctions, we define
-$\alpha$-equivalence and free variables via mutual recursion.
+text \<open>Usually, the definition of $\alpha$-equivalence presupposes a notion of free variables.
+However, the variables that are ``free'' in an infinitary conjunction are not necessarily those
+that are free in one of the conjuncts. For instance, consider a conjunction over \emph{all} names.
+Applying any permutation will yield the same conjunction, i.e., this conjunction has \emph{no} free
+variables.
 
-I conjecture that the concept of ``free variables'' is not needed at all: we could directly use the
-support modulo $\alpha$-equivalence instead. Working out the details (which might simplify the mutually
-recursive definition below) is left for another time.\<close>
+To obtain the correct notion of free variables for infinitary conjunctions, we initially defined
+$\alpha$-equivalence and free variables via mutual recursion. In particular, we defined the free
+variables of a conjunction as term @{term "fv_Tree (tConj tset) = supp_rel alpha_Tree (tConj tset)"}.
 
-text \<open>The following lemmas and constructions are used to prove termination of our mutually recursive
-definition.\<close>
+We then realized that it is not necessary to define the concept of ``free variables'' at all, but
+the definition of $\alpha$-equivalence becomes much simpler (in particular, it is no longer mutually
+recursive) if we directly use the support modulo $\alpha$-equivalence.\<close>
+
+text \<open>The following lemmas and constructions are used to prove termination of our definition.\<close>
 
 lemma supp_rel_cong [fundef_cong]:
   "\<lbrakk> x=x'; \<And>a b. R ((a \<rightleftharpoons> b) \<bullet> x') x' \<longleftrightarrow> R' ((a \<rightleftharpoons> b) \<bullet> x') x' \<rbrakk> \<Longrightarrow> supp_rel R x = supp_rel R' x'"
@@ -220,46 +225,37 @@ next
   qed
 qed
 
-fun alpha_Tree_termination :: "('a, 'b, 'c) Tree \<times> ('a, 'b, 'c) Tree + ('a, 'b, 'c) Tree \<Rightarrow> ('a, 'b\<Colon>pt, 'c\<Colon>bn) Tree\<^sub>p set \<times> bool" where
-  "alpha_Tree_termination (Inl (t1, t2)) = ({abs_Tree\<^sub>p t1, abs_Tree\<^sub>p t2}, False)"
-| "alpha_Tree_termination (Inr t) = ({abs_Tree\<^sub>p t}, True)"
+fun alpha_Tree_termination :: "('a, 'b, 'c) Tree \<times> ('a, 'b, 'c) Tree \<Rightarrow> ('a, 'b\<Colon>pt, 'c\<Colon>bn) Tree\<^sub>p set" where
+  "alpha_Tree_termination (t1, t2) = {abs_Tree\<^sub>p t1, abs_Tree\<^sub>p t2}"
 
 text \<open>Here it comes \ldots\<close>
 
 function (sequential)
-  alpha_Tree :: "('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree \<Rightarrow> ('idx,'pred,'act) Tree \<Rightarrow> bool" (infix "=\<^sub>\<alpha>" 50)
-  and fv_Tree :: "('idx,'pred,'act) Tree \<Rightarrow> atom set" where
+  alpha_Tree :: "('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree \<Rightarrow> ('idx,'pred,'act) Tree \<Rightarrow> bool" (infix "=\<^sub>\<alpha>" 50) where
 -- \<open>@{const alpha_Tree}\<close>
   alpha_tConj: "tConj tset1 =\<^sub>\<alpha> tConj tset2 \<longleftrightarrow> rel_bset alpha_Tree tset1 tset2"
 | alpha_tNot: "tNot t1 =\<^sub>\<alpha> tNot t2 \<longleftrightarrow> t1 =\<^sub>\<alpha> t2"
 | alpha_tPred: "tPred \<phi>1 =\<^sub>\<alpha> tPred \<phi>2 \<longleftrightarrow> \<phi>1 = \<phi>2"
 -- \<open>the action may have binding names\<close>
 | alpha_tAct: "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2 \<longleftrightarrow>
-    (\<exists>p. (bn \<alpha>1, t1) \<approx>set alpha_Tree fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op=) supp p (bn \<alpha>2, \<alpha>2))"
+    (\<exists>p. (bn \<alpha>1, t1) \<approx>set alpha_Tree (supp_rel alpha_Tree) p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op=) supp p (bn \<alpha>2, \<alpha>2))"
 | alpha_other: "_ =\<^sub>\<alpha> _ \<longleftrightarrow> False"
--- \<open>@{const fv_Tree}\<close>
--- \<open>the free variables in a conjunction are the support of its $\alpha$-equivalence class\<close>
-| fv_tConj: "fv_Tree (tConj tset) = supp_rel alpha_Tree (tConj tset)"
-| fv_tNot: "fv_Tree (tNot t) = fv_Tree t"
-| fv_tPred: "fv_Tree (tPred \<phi>) = supp \<phi>"
-| fv_tAct: "fv_Tree (tAct \<alpha> t) = (supp \<alpha> \<union> fv_Tree t) - bn \<alpha>"
--- \<open>352 subgoals (!)\<close>
+-- \<open>254 subgoals (!)\<close>
 by pat_completeness auto
-termination proof
-  let ?R = "inv_image (max_ext Tree_wf\<^sub>p <*lex*> less_bool_rel) alpha_Tree_termination"
+termination
+proof
+  let ?R = "inv_image (max_ext Tree_wf\<^sub>p) alpha_Tree_termination"
   show "wf ?R"
-    by (metis max_ext_wf wf_Tree_wf\<^sub>p wf_inv_image wf_less_bool_rel wf_lex_prod)
+    by (metis max_ext_wf wf_Tree_wf\<^sub>p wf_inv_image)
 qed (auto simp add: max_ext.simps Tree_wf.simps simp del: permute_Tree_tConj)
 
-text \<open>We provide more descriptive case names for the automatically generated induction principle,
-and specialize it to an induction rule for $\alpha$-equivalence.\<close>
+text \<open>We provide more descriptive case names for the automatically generated induction principle.\<close>
 
-lemmas alpha_Tree_fv_Tree_induct = alpha_Tree_fv_Tree.induct[case_names alpha_tConj alpha_tNot
+lemmas alpha_Tree_induct' = alpha_Tree.induct[case_names alpha_tConj alpha_tNot
   alpha_tPred alpha_tAct "alpha_other(1)" "alpha_other(2)" "alpha_other(3)" "alpha_other(4)"
   "alpha_other(5)" "alpha_other(6)" "alpha_other(7)" "alpha_other(8)" "alpha_other(9)"
   "alpha_other(10)" "alpha_other(11)" "alpha_other(12)" "alpha_other(13)" "alpha_other(14)"
-  "alpha_other(15)" "alpha_other(16)" "alpha_other(17)" "alpha_other(18)" fv_tConj fv_tNot fv_tPred
-  fv_tAct]
+  "alpha_other(15)" "alpha_other(16)" "alpha_other(17)" "alpha_other(18)"]
 
 lemma alpha_Tree_induct[case_names tConj tNot tPred tAct, consumes 1]:
   assumes "t1 =\<^sub>\<alpha> t2"
@@ -268,18 +264,50 @@ lemma alpha_Tree_induct[case_names tConj tNot tPred tAct, consumes 1]:
   and "\<And>t1 t2. t1 =\<^sub>\<alpha> t2 \<Longrightarrow> P t1 t2 \<Longrightarrow> P (tNot t1) (tNot t2)"
   and "\<And>\<phi>. P (tPred \<phi>) (tPred \<phi>)"
   and "\<And>\<alpha>1 t1 \<alpha>2 t2. (\<And>p. p \<bullet> t1 =\<^sub>\<alpha> t2 \<Longrightarrow> P (p \<bullet> t1) t2) \<Longrightarrow>
-            (\<exists>p. (bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)) \<Longrightarrow>
+            (\<And>a b. ((a \<rightleftharpoons> b) \<bullet> t1) =\<^sub>\<alpha> t1 \<Longrightarrow> P ((a \<rightleftharpoons> b) \<bullet> t1) t1) \<Longrightarrow> (\<And>a b. ((a \<rightleftharpoons> b) \<bullet> t2) =\<^sub>\<alpha> t2 \<Longrightarrow> P ((a \<rightleftharpoons> b) \<bullet> t2) t2) \<Longrightarrow>
+            (\<exists>p. (bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)) \<Longrightarrow>
             P (tAct \<alpha>1 t1) (tAct \<alpha>2 t2)"
   shows "P t1 t2"
-using assms by (induction t1 t2 rule: alpha_Tree_fv_Tree_induct(1)[where Q="\<lambda>x. True"]) simp_all
+using assms by (induction t1 t2 rule: alpha_Tree.induct) simp_all
 
-text \<open>$\alpha$-equivalence and the free-variables function are equivariant.\<close>
+text \<open>$\alpha$-equivalence is equivariant.\<close>
 
-lemma
-  fixes t1 t2 t :: "('a,'b::pt,'c::bn) Tree"
-  shows alpha_Tree_eqvt': "t1 =\<^sub>\<alpha> t2 \<longleftrightarrow> p \<bullet> t1 =\<^sub>\<alpha> p \<bullet> t2"
-  and fv_Tree_eqvt [eqvt]: "p \<bullet> fv_Tree t = fv_Tree (p \<bullet> t)"
-proof (induction t1 t2 and t rule: alpha_Tree_fv_Tree_induct)
+lemma alpha_Tree_eqvt_aux:
+  assumes "\<And>a b. (a \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t \<longleftrightarrow> p \<bullet> (a \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> p \<bullet> t"
+  shows "p \<bullet> supp_rel (op =\<^sub>\<alpha>) t = supp_rel (op =\<^sub>\<alpha>) (p \<bullet> t)"
+proof -
+  {
+    fix a
+    let ?B = "{b. \<not> ((a \<rightleftharpoons> b) \<bullet> t) =\<^sub>\<alpha> t}"
+    let ?pB = "{b. \<not> ((p \<bullet> a \<rightleftharpoons> b) \<bullet> p \<bullet> t) =\<^sub>\<alpha> (p \<bullet> t)}"
+    {
+      assume "finite ?B"
+      moreover have "inj_on (unpermute p) ?pB"
+        by (simp add: inj_on_def unpermute_def)
+      moreover have "unpermute p ` ?pB \<subseteq> ?B"
+        using assms by auto (metis (erased, lifting) eqvt_bound permute_eqvt swap_eqvt)
+      ultimately have "finite ?pB"
+        by (metis inj_on_finite)
+    }
+    moreover
+    {
+      assume "finite ?pB"
+      moreover have "inj_on (permute p) ?B"
+        by (simp add: inj_on_def)
+      moreover have "permute p ` ?B \<subseteq> ?pB"
+        using assms by auto (metis (erased, lifting) permute_eqvt swap_eqvt)
+      ultimately have "finite ?B"
+        by (metis inj_on_finite)
+    }
+    ultimately have "infinite ?B \<longleftrightarrow> infinite ?pB"
+      by auto
+  }
+  then show ?thesis
+    by (auto simp add: supp_rel_def permute_set_def) (metis eqvt_bound)
+qed
+
+lemma alpha_Tree_eqvt': "t1 =\<^sub>\<alpha> t2 \<longleftrightarrow> p \<bullet> t1 =\<^sub>\<alpha> p \<bullet> t2"
+using assms proof (induction t1 t2 rule: alpha_Tree_induct')
   case (alpha_tConj tset1 tset2) show ?case
   proof
     assume *: "tConj tset1 =\<^sub>\<alpha> tConj tset2"
@@ -345,31 +373,44 @@ proof (induction t1 t2 and t rule: alpha_Tree_fv_Tree_induct)
       by (simp add: rel_bset_def rel_set_def)
   qed
 next
-  case (alpha_tAct \<alpha>1 t1 \<alpha>2 t2) show ?case
+  case (alpha_tAct \<alpha>1 t1 \<alpha>2 t2)
+  from alpha_tAct.IH(2) have t1: "p \<bullet> supp_rel (op =\<^sub>\<alpha>) t1 = supp_rel (op =\<^sub>\<alpha>) (p \<bullet> t1)"
+    by (rule alpha_Tree_eqvt_aux)
+  from alpha_tAct.IH(3) have t2: "p \<bullet> supp_rel (op =\<^sub>\<alpha>) t2 = supp_rel (op =\<^sub>\<alpha>) (p \<bullet> t2)"
+    by (rule alpha_Tree_eqvt_aux)
+  show ?case
   proof
     assume "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
-    then obtain q where 1: "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree q (bn \<alpha>2, t2)" and 2: "(bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp q (bn \<alpha>2, \<alpha>2)"
+    then obtain q where 1: "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) q (bn \<alpha>2, t2)" and 2: "(bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp q (bn \<alpha>2, \<alpha>2)"
       by auto
-    from 1 have "(bn (p \<bullet> \<alpha>1), p \<bullet> t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (p + q - p) (bn (p \<bullet> \<alpha>2), p \<bullet> t2)"
-      using alpha_tAct.IH by (simp add: alpha_set) (metis (mono_tags, lifting) Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def)
+    from 1 and t1 and t2 have "supp_rel (op =\<^sub>\<alpha>) (p \<bullet> t1) - bn (p \<bullet> \<alpha>1) = supp_rel (op =\<^sub>\<alpha>) (p \<bullet> t2) - bn (p \<bullet> \<alpha>2)"
+      by (metis Diff_eqvt alpha_set bn_eqvt)
+    moreover from 1 and t1 have "(supp_rel (op =\<^sub>\<alpha>) (p \<bullet> t1) - bn (p \<bullet> \<alpha>1)) \<sharp>* (p + q - p)"
+      by (metis Diff_eqvt alpha_set bn_eqvt fresh_star_permute_iff permute_perm_def)
+    moreover from 1 and alpha_tAct.IH(1) have "p \<bullet> q \<bullet> t1 =\<^sub>\<alpha> p \<bullet> t2"
+      by (simp add: alpha_set)
+    moreover from 2 have "p \<bullet> q \<bullet> -p \<bullet> bn (p \<bullet> \<alpha>1) = bn (p \<bullet> \<alpha>2)"
+      by (simp add: alpha_set bn_eqvt)
+    ultimately have "(bn (p \<bullet> \<alpha>1), p \<bullet> t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) (p + q - p) (bn (p \<bullet> \<alpha>2), p \<bullet> t2)"
+      by (simp add: alpha_set)
     moreover from 2 have "(bn (p \<bullet> \<alpha>1), p \<bullet> \<alpha>1) \<approx>set (op =) supp (p + q - p) (bn (p \<bullet> \<alpha>2), p \<bullet> \<alpha>2)"
       by (simp add: alpha_set) (metis (mono_tags, lifting) Diff_eqvt bn_eqvt fresh_star_permute_iff permute_minus_cancel(2) permute_perm_def supp_eqvt)
     ultimately show "p \<bullet> tAct \<alpha>1 t1 =\<^sub>\<alpha> p \<bullet> tAct \<alpha>2 t2"
       by auto
   next
     assume "p \<bullet> tAct \<alpha>1 t1 =\<^sub>\<alpha> p \<bullet> tAct \<alpha>2 t2"
-    then obtain q where 1: "(bn (p \<bullet> \<alpha>1), p \<bullet> t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree q (bn (p \<bullet> \<alpha>2), p \<bullet> t2)" and 2: "(bn (p \<bullet> \<alpha>1), p \<bullet> \<alpha>1) \<approx>set (op =) supp q (bn (p \<bullet> \<alpha>2), p \<bullet> \<alpha>2)"
+    then obtain q where 1: "(bn (p \<bullet> \<alpha>1), p \<bullet> t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) q (bn (p \<bullet> \<alpha>2), p \<bullet> t2)" and 2: "(bn (p \<bullet> \<alpha>1), p \<bullet> \<alpha>1) \<approx>set (op =) supp q (bn (p \<bullet> \<alpha>2), p \<bullet> \<alpha>2)"
       by auto
     {
-      from 1 have "fv_Tree t1 - bn \<alpha>1 = fv_Tree t2 - bn \<alpha>2"
-        using alpha_tAct.IH(2) alpha_tAct.IH(3) by (metis (no_types, lifting) Diff_eqvt alpha_set bn_eqvt permute_eq_iff)
-      moreover with 1 have "(fv_Tree t1 - bn \<alpha>1) \<sharp>* (- p + q + p)"
-        using alpha_tAct.IH(3) by (auto simp add: fresh_star_def fresh_perm alphas) (metis (no_types, lifting) DiffI bn_eqvt mem_permute_iff permute_minus_cancel(2))
+      from 1 and t1 and t2 have "supp_rel (op =\<^sub>\<alpha>) t1 - bn \<alpha>1 = supp_rel (op =\<^sub>\<alpha>) t2 - bn \<alpha>2"
+        by (metis (no_types, lifting) Diff_eqvt alpha_set bn_eqvt permute_eq_iff)
+      moreover with 1 and t2 have "(supp_rel (op =\<^sub>\<alpha>) t1 - bn \<alpha>1) \<sharp>* (- p + q + p)"
+        by (auto simp add: fresh_star_def fresh_perm alphas) (metis (no_types, lifting) DiffI bn_eqvt mem_permute_iff permute_minus_cancel(2))
       moreover from 1 have "- p \<bullet> q \<bullet> p \<bullet> t1 =\<^sub>\<alpha> t2"
         using alpha_tAct.IH(1) by (simp add: alpha_set) (metis (no_types, lifting) permute_eqvt permute_minus_cancel(2))
       moreover from 1 have "- p \<bullet> q \<bullet> p \<bullet> bn \<alpha>1 = bn \<alpha>2"
         by (metis alpha_set bn_eqvt permute_minus_cancel(2))
-      ultimately have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (-p + q + p) (bn \<alpha>2, t2)"
+      ultimately have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) (-p + q + p) (bn \<alpha>2, t2)"
         by (simp add: alpha_set)
     }
     moreover
@@ -388,39 +429,6 @@ next
     ultimately show "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
       by auto
   qed
-next
-  case (fv_tConj tset)
-  {
-    fix a
-    let ?B = "{b. \<not> rel_bset (op =\<^sub>\<alpha>) ((a \<rightleftharpoons> b) \<bullet> tset) tset}"
-    let ?pB = "{b. \<not> rel_bset (op =\<^sub>\<alpha>) ((p \<bullet> a \<rightleftharpoons> b) \<bullet> p \<bullet> tset) (p \<bullet> tset)}"
-    {
-      assume "finite ?B"
-      moreover have "inj_on (unpermute p) ?pB"
-        by (simp add: inj_on_def unpermute_def)
-      moreover have "unpermute p ` ?pB \<subseteq> ?B"
-        using fv_tConj.IH by auto (metis (erased, lifting) eqvt_bound permute_eqvt swap_eqvt)
-      ultimately have "finite ?pB"
-        by (metis inj_on_finite)
-    }
-    moreover
-    {
-      assume "finite ?pB"
-      moreover have "inj_on (permute p) ?B"
-        by (simp add: inj_on_def)
-      moreover have "permute p ` ?B \<subseteq> ?pB"
-        using fv_tConj.IH by auto (metis (erased, lifting) permute_eqvt swap_eqvt)
-      ultimately have "finite ?B"
-        by (metis inj_on_finite)
-    }
-    ultimately have "infinite ?B \<longleftrightarrow> infinite ?pB"
-      by auto
-  }
-  then show ?case
-    by (auto simp add: supp_rel_def permute_set_def) (metis eqvt_bound)
-next
-  case fv_tAct then show ?case
-    by (simp add: bn_eqvt Diff_eqvt union_eqvt)
 qed simp_all
 
 lemma alpha_Tree_eqvt [eqvt]: "t1 =\<^sub>\<alpha> t2 \<Longrightarrow> p \<bullet> t1 =\<^sub>\<alpha> p \<bullet> t2"
@@ -452,9 +460,9 @@ proof (rule sympI)
       by (simp add: rel_bset_def rel_set_def) metis
   next
     case (tAct \<alpha>1 t1 \<alpha>2 t2)
-    then obtain p where "(bn \<alpha>1, t1) \<approx>set op =\<^sub>\<alpha> fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)"
+    then obtain p where "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)"
       by auto
-    then have "(bn \<alpha>2, t2) \<approx>set op =\<^sub>\<alpha> fv_Tree (-p) (bn \<alpha>1, t1) \<and> (bn \<alpha>2, \<alpha>2) \<approx>set (op =) supp (-p) (bn \<alpha>1, \<alpha>1)"
+    then have "(bn \<alpha>2, t2) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) (-p) (bn \<alpha>1, t1) \<and> (bn \<alpha>2, \<alpha>2) \<approx>set (op =) supp (-p) (bn \<alpha>1, \<alpha>1)"
       using tAct.IH by (metis (mono_tags, lifting) alpha_Tree_eqvt alpha_sym(1) permute_minus_cancel(2))
     then show ?case
       by auto
@@ -514,15 +522,15 @@ proof (rule transpI)
     proof (cases z)
       fix \<alpha> t
       assume z: "z = tAct \<alpha> t"
-      obtain p where 1: "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)"
+      obtain p where 1: "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) p (bn \<alpha>2, t2) \<and> (bn \<alpha>1, \<alpha>1) \<approx>set (op =) supp p (bn \<alpha>2, \<alpha>2)"
         using tAct.hyps by auto
-      obtain q where 2: "(bn \<alpha>2, t2) \<approx>set (op =\<^sub>\<alpha>) fv_Tree q (bn \<alpha>, t) \<and> (bn \<alpha>2, \<alpha>2) \<approx>set (op =) supp q (bn \<alpha>, \<alpha>)"
+      obtain q where 2: "(bn \<alpha>2, t2) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) q (bn \<alpha>, t) \<and> (bn \<alpha>2, \<alpha>2) \<approx>set (op =) supp q (bn \<alpha>, \<alpha>)"
         using tAct.prems z by auto
-      have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree (q + p) (bn \<alpha>, t)"
+      have "(bn \<alpha>1, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) (q + p) (bn \<alpha>, t)"
         proof -
-          have "fv_Tree t1 - bn \<alpha>1 = fv_Tree t - bn \<alpha>"
+          have "supp_rel (op =\<^sub>\<alpha>) t1 - bn \<alpha>1 = supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
             using 1 and 2 by (metis alpha_set)
-          moreover have "(fv_Tree t1 - bn \<alpha>1) \<sharp>* (q + p)"
+          moreover have "(supp_rel (op =\<^sub>\<alpha>) t1 - bn \<alpha>1) \<sharp>* (q + p)"
             using 1 and 2 by (metis alpha_set fresh_star_plus)
           moreover have "(q + p) \<bullet> t1 =\<^sub>\<alpha> t"
             using 1 and 2 and tAct.IH by (metis (no_types, lifting) alpha_Tree_eqvt alpha_set permute_minus_cancel(1) permute_plus)
@@ -542,11 +550,11 @@ qed
 lemma alpha_Tree_equivp: "equivp alpha_Tree"
 by (auto intro: equivpI alpha_Tree_reflp alpha_Tree_symp alpha_Tree_transp)
 
-text \<open>$alpha$-equivalent trees have the same set of free variables.\<close>
+text \<open>$alpha$-equivalent trees have the same support modulo $alpha$-equivalence.\<close>
 
-lemma alpha_Tree_fv_Tree:
+lemma alpha_Tree_supp_rel:
   assumes "t1 =\<^sub>\<alpha> t2"
-  shows "fv_Tree t1 = fv_Tree t2"
+  shows "supp_rel (op =\<^sub>\<alpha>) t1 = supp_rel (op =\<^sub>\<alpha>) t2"
 using assms proof (induction rule: alpha_Tree_induct)
   case (tConj tset1 tset2)
   have sym: "\<And>x y. rel_bset (op =\<^sub>\<alpha>) x y \<longleftrightarrow> rel_bset (op =\<^sub>\<alpha>) y x"
@@ -561,8 +569,19 @@ using assms proof (induction rule: alpha_Tree_induct)
   then show ?case
     by (simp add: supp_rel_def)
 next
-  case tAct then show ?case
-    by (clarsimp simp add: alphas alphas_abs) (metis Un_Diff)
+  case tNot then show ?case
+    by (simp add: supp_rel_def)
+next
+  case (tAct \<alpha>1 t1 \<alpha>2 t2)
+  {
+    fix a b
+    have "tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>2 t2"
+      using tAct.hyps by simp
+    then have "(a \<rightleftharpoons> b) \<bullet> tAct \<alpha>1 t1 =\<^sub>\<alpha> tAct \<alpha>1 t1 \<longleftrightarrow> (a \<rightleftharpoons> b) \<bullet> tAct \<alpha>2 t2 =\<^sub>\<alpha> tAct \<alpha>2 t2"
+      by (metis (no_types, lifting) alpha_Tree_eqvt alpha_Tree_symp alpha_Tree_transp sympE transpE)
+  }
+  then show ?case
+    by (simp add: supp_rel_def)
 qed simp_all
 
 text \<open>@{const tAct} preserves $\alpha$-equivalence.\<close>
@@ -571,12 +590,142 @@ lemma alpha_Tree_tAct:
   assumes "t1 =\<^sub>\<alpha> t2"
   shows "tAct \<alpha> t1 =\<^sub>\<alpha> tAct \<alpha> t2"
 proof -
-  have "(bn \<alpha>, t1) \<approx>set (op =\<^sub>\<alpha>) fv_Tree 0 (bn \<alpha>, t2)" (is "?P 0")
-    using assms by (simp add: alpha_Tree_fv_Tree alphas(1) fresh_star_zero)
-  moreover have "(bn \<alpha>, \<alpha>) \<approx>set (op =) supp 0 (bn \<alpha>, \<alpha>)" (is "?Q 0")
+  have "(bn \<alpha>, t1) \<approx>set (op =\<^sub>\<alpha>) (supp_rel (op =\<^sub>\<alpha>)) 0 (bn \<alpha>, t2)"
+    using assms by (simp add: alpha_Tree_supp_rel alpha_set fresh_star_zero)
+  moreover have "(bn \<alpha>, \<alpha>) \<approx>set (op =) supp 0 (bn \<alpha>, \<alpha>)"
     by (metis (full_types) alpha_refl(1))
   ultimately show ?thesis
     by auto
+qed
+
+text \<open>The following lemmas describe the support modulo $alpha$-equivalence.\<close>
+
+lemma supp_rel_tNot [simp]: "supp_rel (op =\<^sub>\<alpha>) (tNot t) = supp_rel (op =\<^sub>\<alpha>) t"
+unfolding supp_rel_def by simp
+
+lemma supp_rel_tPred [simp]: "supp_rel (op =\<^sub>\<alpha>) (tPred \<phi>) = supp \<phi>"
+unfolding supp_rel_def supp_def by simp
+
+text \<open>The support modulo $\alpha$-equivalence of~@{term "tAct \<alpha> t"} is not easily described:
+when~@{term t} has infinite support (modulo $\alpha$-equivalence), the support (modulo
+$\alpha$-equivalence) of~@{term "tAct \<alpha> t"} may still contain names in~@{term "bn \<alpha>"}. This
+incongruity is avoided when~@{term t} has finite support modulo $\alpha$-equivalence.\<close>
+
+lemma infinite_mono: "infinite S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> x \<in> T) \<Longrightarrow> infinite T"
+by (metis infinite_super subsetI)
+
+lemma supp_rel_tAct [simp]:
+  assumes "finite (supp_rel (op =\<^sub>\<alpha>) t)"
+  shows "supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t) = supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+proof
+  show "supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha> \<subseteq> supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t)"
+  proof
+    fix x
+    assume "x \<in> supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+    moreover
+    {
+      assume x1: "x \<in> supp \<alpha>" and x2: "x \<notin> bn \<alpha>"
+      from x1 have "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>}"
+        unfolding supp_def ..
+      then have "infinite ({b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>)"
+        by (simp add: finite_supp)
+      moreover
+      {
+        fix b
+        assume "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>"
+        then have b1: "(x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>" and b2: "b \<notin> supp \<alpha> - bn \<alpha>"
+          by simp+
+        from b1 have "sort_of x = sort_of b"
+          using swap_different_sorts by fastforce
+        then have "(x \<rightleftharpoons> b) \<bullet> (supp \<alpha> - bn \<alpha>) \<noteq> supp \<alpha> - bn \<alpha>"
+          using b2 x1 x2 by (simp add: swap_set_in)
+        then have "b \<in> {b. \<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t}"
+          by (auto simp add: alpha_set Diff_eqvt bn_eqvt)
+      }
+      ultimately have "infinite {b. \<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t}"
+        by (rule infinite_mono)
+      then have "x \<in> supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t)"
+        unfolding supp_rel_def ..
+    }
+    moreover
+    {
+      assume x1: "x \<in> supp_rel (op =\<^sub>\<alpha>) t" and x2: "x \<notin> bn \<alpha>"
+      from x1 have "infinite {b. \<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t}"
+        unfolding supp_rel_def ..
+      then have "infinite ({b. \<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t} - supp_rel (op =\<^sub>\<alpha>) t)"
+        using assms by simp
+      moreover
+      {
+        fix b
+        assume "b \<in> {b. \<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t} - supp_rel (op =\<^sub>\<alpha>) t"
+        then have b1: "\<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t" and b2: "b \<notin> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+          by simp+
+        from b1 have "(x \<rightleftharpoons> b) \<bullet> t \<noteq> t"
+          by (metis alpha_Tree_reflp reflpE)
+        then have "sort_of x = sort_of b"
+          using swap_different_sorts by fastforce
+        then have "(x \<rightleftharpoons> b) \<bullet> (supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>) \<noteq> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+          using b2 x1 x2 by (simp add: swap_set_in)
+        then have "supp_rel (op =\<^sub>\<alpha>) ((x \<rightleftharpoons> b) \<bullet> t) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) \<noteq> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+          by (simp add: Diff_eqvt bn_eqvt)
+        then have "b \<in> {b. \<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t}"
+          by (simp add: alpha_set)
+      }
+      ultimately have "infinite {b. \<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t}"
+        by (rule infinite_mono)
+      then have "x \<in> supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t)"
+        unfolding supp_rel_def ..
+    }
+    ultimately show "x \<in> supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t)"
+      by auto
+  qed
+next
+  show "supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t) \<subseteq> supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+  proof
+    fix x
+    assume "x \<in> supp_rel (op =\<^sub>\<alpha>) (tAct \<alpha> t)"
+    then have *: "infinite {b. \<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t}"
+      unfolding supp_rel_def ..
+    moreover
+    {
+      fix b
+      assume "\<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t"
+      then have "(x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha> \<or> \<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t"
+        using alpha_Tree_tAct by force
+    }
+    ultimately have "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha> \<or> \<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t}"
+      by (metis (mono_tags, lifting) infinite_mono mem_Collect_eq)
+    then have "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} \<or> infinite {b. \<not> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t}"
+      by (metis (mono_tags) finite_Collect_disjI)
+    then have "x \<in> supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t"
+      by (simp add: supp_def supp_rel_def)
+    moreover 
+    {
+      assume **: "x \<in> bn \<alpha>"
+      from "*" obtain b where b1: "\<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t" and b2: "b \<notin> supp \<alpha>" and b3: "b \<notin> supp_rel (op =\<^sub>\<alpha>) t"
+        using assms by (metis (no_types, lifting) UnCI finite_UnI finite_supp infinite_mono mem_Collect_eq)
+      let ?p = "(x \<rightleftharpoons> b)"
+      have "supp_rel (op =\<^sub>\<alpha>) ((x \<rightleftharpoons> b) \<bullet> t) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+        using "**" and b3 by (metis (no_types, lifting) Diff_eqvt Diff_iff alpha_Tree_eqvt' alpha_Tree_eqvt_aux bn_eqvt swap_set_not_in)
+      moreover then have "(supp_rel (op =\<^sub>\<alpha>) ((x \<rightleftharpoons> b) \<bullet> t) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>)) \<sharp>* ?p"
+        using "**" and b3 by (metis Diff_iff fresh_perm fresh_star_def swap_atom_simps(3))
+      moreover have "?p \<bullet> (x \<rightleftharpoons> b) \<bullet> t =\<^sub>\<alpha> t"
+        using alpha_Tree_reflp reflpE by force
+      moreover have "?p \<bullet> bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = bn \<alpha>"
+        by (simp add: bn_eqvt)
+      moreover have "supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = supp \<alpha> - bn \<alpha>"
+        using "**" and b2 by (metis (mono_tags, hide_lams) Diff_eqvt Diff_iff bn_eqvt supp_eqvt swap_set_not_in)
+      moreover then have "(supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>)) \<sharp>* ?p"
+        using "**" and b2 by (simp add: fresh_star_def fresh_def supp_perm) (metis Diff_iff swap_atom_simps(3))
+      moreover have "?p \<bullet> (x \<rightleftharpoons> b) \<bullet> \<alpha> = \<alpha>"
+        by simp
+      ultimately have "(x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t"
+        by (auto simp add: alpha_set)
+      with b1 have "False" ..
+    }
+    ultimately show "x \<in> supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t - bn \<alpha>"
+      by blast
+  qed
 qed
 
 text \<open>We define the type of (infinitely branching) trees quotiented by $\alpha$-equivalence.\<close>
@@ -740,7 +889,10 @@ next
     by simp
 qed
 
-text \<open>The lifted constructors are quasi-free.\<close>
+lemma Act\<^sub>\<alpha>_eq_iff: "Act\<^sub>\<alpha> \<alpha>1 t1 = Act\<^sub>\<alpha> \<alpha>2 t2 \<longleftrightarrow> tAct \<alpha>1 (rep_Tree\<^sub>\<alpha> t1) =\<^sub>\<alpha> tAct \<alpha>2 (rep_Tree\<^sub>\<alpha> t2)"
+by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep)
+
+text \<open>The lifted constructors are free (except for~@{const Act\<^sub>\<alpha>}).\<close>
 
 lemma Tree\<^sub>\<alpha>_free [simp]:
   shows "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Not\<^sub>\<alpha> t\<^sub>\<alpha>"
@@ -749,29 +901,12 @@ lemma Tree\<^sub>\<alpha>_free [simp]:
   and "Not\<^sub>\<alpha> t\<^sub>\<alpha> \<noteq> Pred\<^sub>\<alpha> \<phi>"
   and "Not\<^sub>\<alpha> t1\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t2\<^sub>\<alpha>"
   and "Pred\<^sub>\<alpha> \<phi> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-proof -
-  show "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Not\<^sub>\<alpha> t\<^sub>\<alpha>"
-    by (simp add: Conj\<^sub>\<alpha>_def' Not\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
-next
-  show "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Pred\<^sub>\<alpha> \<phi>"
-    by (simp add: Conj\<^sub>\<alpha>_def' Pred\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
-next
-  show "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-    by (simp add: Conj\<^sub>\<alpha>_def' Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
-next
-  show "Not\<^sub>\<alpha> t\<^sub>\<alpha> \<noteq> Pred\<^sub>\<alpha> \<phi>"
-    by (simp add: Not\<^sub>\<alpha>_def Pred\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
-next
-  show "Not\<^sub>\<alpha> t1\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t2\<^sub>\<alpha>"
-    by (simp add: Not\<^sub>\<alpha>_def Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
-next
-  show "Pred\<^sub>\<alpha> \<phi> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-    by (simp add: Pred\<^sub>\<alpha>_def Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)
-qed
+by (simp add: Conj\<^sub>\<alpha>_def' Not\<^sub>\<alpha>_def Pred\<^sub>\<alpha>_def Act\<^sub>\<alpha>_def Tree\<^sub>\<alpha>.abs_eq_iff)+
 
-text \<open>The following lemmas describe the support of constructed trees modulo $\alpha$-equivalence.
-For~@{term "Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"}, we merely prove that it is finitely supported, provided~@{term t\<^sub>\<alpha>} has
-finite support.\<close>
+text \<open>The following lemmas describe the support of constructed trees modulo $\alpha$-equivalence.\<close>
+
+lemma supp_alpha_supp_rel: "supp t\<^sub>\<alpha> = supp_rel (op =\<^sub>\<alpha>) (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)"
+unfolding supp_def supp_rel_def by (metis (mono_tags, lifting) Collect_cong Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep alpha_Tree_permute_rep_commute)
 
 lemma supp_Conj\<^sub>\<alpha> [simp]: "supp (Conj\<^sub>\<alpha> tset\<^sub>\<alpha>) = supp tset\<^sub>\<alpha>"
 unfolding supp_def by simp
@@ -782,15 +917,10 @@ unfolding supp_def by simp
 lemma supp_Pred\<^sub>\<alpha> [simp]: "supp (Pred\<^sub>\<alpha> \<phi>) = supp \<phi>"
 unfolding supp_def by simp
 
-lemma finite_supp_implies_finite_supp_Act\<^sub>\<alpha> [simp]:
+lemma supp_Act\<^sub>\<alpha> [simp]:
   assumes "finite (supp t\<^sub>\<alpha>)"
-  shows "finite (supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>))"
-proof -
-  have "(supp t\<^sub>\<alpha> \<union> supp \<alpha>) supports Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-    unfolding supports_def by simp (metis fresh_def swap_fresh_fresh)
-  then show ?thesis
-    using assms by (metis finite_UnI finite_supp supports_finite)
-qed
+  shows "supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) = supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
+using assms by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>_abs_rep Tree\<^sub>\<alpha>_rep_abs alpha_Tree_supp_rel supp_alpha_supp_rel supp_rel_tAct)
 
 
 subsection \<open>Induction over trees modulo \texorpdfstring{$\alpha$}{alpha}-equivalence\<close>
@@ -1049,6 +1179,9 @@ by (metis Not.rep_eq supp_Not\<^sub>\<alpha> supp_Rep_formula)
 lemma supp_Pred [simp]: "supp (Pred \<phi>) = supp \<phi>"
 by (metis Pred.rep_eq supp_Pred\<^sub>\<alpha> supp_Rep_formula)
 
+lemma supp_Act [simp]: "supp (Act \<alpha> x) = supp \<alpha> \<union> supp x - bn \<alpha>"
+by (metis Act.rep_eq finite_supp supp_Act\<^sub>\<alpha> supp_Rep_formula)
+
 text \<open>The lifted constructors are injective (except for @{const Act}).\<close>
 
 lemma Conj_eq_iff [simp]:
@@ -1063,7 +1196,10 @@ by (metis Not.rep_eq Not\<^sub>\<alpha>_eq_iff Rep_formula_inverse)
 lemma Pred_eq_iff [simp]: "Pred \<phi>1 = Pred \<phi>2 \<longleftrightarrow> \<phi>1 = \<phi>2"
 by (metis Pred.rep_eq Pred\<^sub>\<alpha>_eq_iff)
 
-text \<open>The lifted constructors are quasi-free.\<close>
+lemma Act_eq_iff: "Act \<alpha>1 x1 = Act \<alpha>2 x2 \<longleftrightarrow> Act\<^sub>\<alpha> \<alpha>1 (Rep_formula x1) = Act\<^sub>\<alpha> \<alpha>2 (Rep_formula x2)"
+by (metis Act.rep_eq Rep_formula_inverse)
+
+text \<open>The lifted constructors are free (except for @{const Act}).\<close>
 
 lemma Tree_free [simp]:
   shows "finite (supp xset) \<Longrightarrow> Conj xset \<noteq> Not x"
@@ -1141,161 +1277,6 @@ qed
 
 
 subsection \<open>Strong induction over infinitary formulas\<close>
-
-text \<open>The following lemmas are needed to prove strong induction. Nonetheless, they should perhaps be
-moved to earlier sections.\<close>
-
-lemma supp_abs_Tree\<^sub>\<alpha>_eq_supp_rel_alpha_Tree: "supp (abs_Tree\<^sub>\<alpha> t) = supp_rel (op =\<^sub>\<alpha>) t"
-by (simp add: supp_rel_def supp_def Tree\<^sub>\<alpha>.abs_eq_iff)
-
-lemma Act_eq_iff: "Act \<alpha>1 x1 = Act \<alpha>2 x2 \<longleftrightarrow> Act\<^sub>\<alpha> \<alpha>1 (Rep_formula x1) = Act\<^sub>\<alpha> \<alpha>2 (Rep_formula x2)"
-by (metis Act.rep_eq Rep_formula_inverse)
-
-lemma Act\<^sub>\<alpha>_eq_iff: "Act\<^sub>\<alpha> \<alpha>1 t1 = Act\<^sub>\<alpha> \<alpha>2 t2 \<longleftrightarrow> tAct \<alpha>1 (rep_Tree\<^sub>\<alpha> t1) =\<^sub>\<alpha> tAct \<alpha>2 (rep_Tree\<^sub>\<alpha> t2)"
-by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep)
-
-lemma infinite_mono: "infinite S \<Longrightarrow> (\<And>x. x \<in> S \<Longrightarrow> x \<in> T) \<Longrightarrow> infinite T"
-by (metis infinite_super subsetI)
-
-lemma fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp:
-  assumes "hereditarily_fs t\<^sub>\<alpha>"
-  shows "fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) = supp t\<^sub>\<alpha>"
-using assms proof (induction rule: hereditarily_fs.induct)
-  case Conj\<^sub>\<alpha> then show ?case
-    by (metis Conj\<^sub>\<alpha>_def' fv_tConj Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_abs_Tree\<^sub>\<alpha>_eq_supp_rel_alpha_Tree)
-next
-  case Not\<^sub>\<alpha> then show ?case
-    by (metis Not\<^sub>\<alpha>.abs_eq fv_tNot Tree\<^sub>\<alpha>_abs_rep Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_Not\<^sub>\<alpha>)
-next
-  case Pred\<^sub>\<alpha> show ?case
-    by (metis Pred\<^sub>\<alpha>.abs_eq fv_tPred Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree supp_Pred\<^sub>\<alpha>)
-next
-  case (Act\<^sub>\<alpha> t\<^sub>\<alpha> \<alpha>)
-  have "fv_Tree (rep_Tree\<^sub>\<alpha> (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)) = fv_Tree (tAct \<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>))"
-    by (metis Act\<^sub>\<alpha>.abs_eq Tree\<^sub>\<alpha>_abs_rep Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree)
-  also have "\<dots> = supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
-    using Act\<^sub>\<alpha>.IH by simp
-  also have "\<dots> = supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-    proof
-      show "supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha> \<subseteq> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-      proof
-        fix x
-        assume "x \<in> supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
-        moreover
-        {
-          assume x1: "x \<in> supp \<alpha>" and x2: "x \<notin> bn \<alpha>"
-          from x1 have "infinite {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>}"
-            unfolding supp_def ..
-          then have "infinite ({b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>)"
-            by (simp add: finite_supp)
-          moreover 
-          {
-            fix b
-            assume "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>} - supp \<alpha>"
-            then have b1: "(x \<rightleftharpoons> b) \<bullet> \<alpha> \<noteq> \<alpha>" and b2: "b \<notin> supp \<alpha> - bn \<alpha>"
-              by simp+
-            from b1 have "sort_of x = sort_of b"
-              using swap_different_sorts by fastforce
-            then have "(x \<rightleftharpoons> b) \<bullet> (supp \<alpha> - bn \<alpha>) \<noteq> supp \<alpha> - bn \<alpha>"
-              using b2 x1 x2 by (simp add: swap_set_in)
-            then have "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
-              by (auto simp add: Act\<^sub>\<alpha>_eq_iff alphas Diff_eqvt bn_eqvt)
-          }
-          ultimately have "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
-            by (rule infinite_mono)
-          then have "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-            unfolding supp_def ..
-        }
-        moreover
-        {
-          assume x1: "x \<in> supp t\<^sub>\<alpha>" and x2: "x \<notin> bn \<alpha>"
-          from x1 have "infinite {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>}"
-            unfolding supp_def ..
-          then have "infinite ({b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>} - supp t\<^sub>\<alpha>)"
-            using Act\<^sub>\<alpha>.hyps by (simp add: hereditarily_fs_implies_finite_supp)
-          moreover
-          {
-            fix b
-            assume "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>} - supp t\<^sub>\<alpha>"
-            then have b1: "(x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha> \<noteq> t\<^sub>\<alpha>" and b2: "b \<notin> supp t\<^sub>\<alpha> - bn \<alpha>"
-              by simp+
-            from b1 have "sort_of x = sort_of b"
-              using swap_different_sorts by fastforce
-            then have "(x \<rightleftharpoons> b) \<bullet> (supp t\<^sub>\<alpha> - bn \<alpha>) \<noteq> supp t\<^sub>\<alpha> - bn \<alpha>"
-              using b2 x1 x2 by (simp add: swap_set_in)
-            then have "fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) \<noteq> fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) - bn \<alpha>"
-              using Act\<^sub>\<alpha>.IH by (metis (no_types, lifting) Diff_eqvt alpha_Tree_fv_Tree alpha_Tree_permute_rep_commute bn_eqvt fv_Tree_eqvt)
-            then have "b \<in> {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
-              by (auto simp add: Act\<^sub>\<alpha>_eq_iff alphas)
-          }
-          ultimately have "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
-            by (rule infinite_mono)
-          then have "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-            unfolding supp_def ..
-        }
-        ultimately show "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-          by auto
-      qed
-    next
-      have "(supp \<alpha> \<union> supp t\<^sub>\<alpha>) supports Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-        by (simp add: supports_def) (metis fresh_def swap_fresh_fresh)
-      moreover
-      {
-        fix x
-        assume x: "x \<in> bn \<alpha>"
-        have "x \<notin> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-          proof
-            assume "x \<in> supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>)"
-            then have "infinite {b. (x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>}"
-              unfolding supp_def ..
-            then obtain b where b1: "(x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> \<noteq> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>" and b2: "b \<notin> supp \<alpha>" and b3: "b \<notin> supp t\<^sub>\<alpha>"
-              using Act\<^sub>\<alpha>.hyps by (metis (mono_tags, lifting) UnCI finite_UnI finite_supp hereditarily_fs_implies_finite_supp infinite_mono mem_Collect_eq)
-            let ?p = "(x \<rightleftharpoons> b)"
-            {
-              have "fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = (x \<rightleftharpoons> b) \<bullet> (fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) - bn \<alpha>)"
-                using Diff_eqvt alpha_Tree_fv_Tree alpha_Tree_permute_rep_commute bn_eqvt fv_Tree_eqvt by blast
-              also have "\<dots> = fv_Tree (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) - bn \<alpha>"
-                using Act\<^sub>\<alpha>.IH and x and b3 by (simp add: swap_set_not_in)
-              moreover have "(fv_Tree (rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>)) \<sharp>* ?p"
-                using calculation and Act\<^sub>\<alpha>.IH and x and b3 by (metis DiffD1 DiffD2 fresh_perm fresh_star_def swap_atom_simps(3))
-              moreover have "?p \<bullet> rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>) =\<^sub>\<alpha> rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>"
-                by (metis Tree\<^sub>\<alpha>.abs_eq_iff Tree\<^sub>\<alpha>_abs_rep permute_Tree\<^sub>\<alpha>.abs_eq permute_swap_cancel)
-              moreover have "?p \<bullet> bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = bn \<alpha>"
-                by (simp add: bn_eqvt)
-              ultimately have "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), rep_Tree\<^sub>\<alpha> ((x \<rightleftharpoons> b) \<bullet> t\<^sub>\<alpha>)) \<approx>set (op =\<^sub>\<alpha>) fv_Tree ?p (bn \<alpha>, rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>)"
-                by (simp add: alphas)
-            }
-            moreover
-            {
-              have "supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = supp \<alpha> - bn \<alpha>"
-                using x and b2 by (metis (no_types, lifting) Abs_swap1(1) DiffD1 DiffD2 bn_eqvt supp_Abs(1))
-              moreover have "(supp ((x \<rightleftharpoons> b) \<bullet> \<alpha>) - bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>)) \<sharp>* ?p"
-                using calculation and x and b2 by (metis DiffD1 DiffD2 fresh_perm fresh_star_def swap_atom_simps(3))
-              moreover have "?p \<bullet> (x \<rightleftharpoons> b) \<bullet> \<alpha> = \<alpha>"
-                by simp
-              moreover have "?p \<bullet> bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>) = bn \<alpha>"
-                by (simp add: bn_eqvt)
-              ultimately have "(bn ((x \<rightleftharpoons> b) \<bullet> \<alpha>), (x \<rightleftharpoons> b) \<bullet> \<alpha>) \<approx>set (op =) supp ?p (bn \<alpha>, \<alpha>)"
-                by (simp add: alphas)
-            }
-            ultimately have "(x \<rightleftharpoons> b) \<bullet> Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha> = Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>"
-              by (auto simp add: Act\<^sub>\<alpha>_eq_iff)
-            with b1 show False ..
-          qed
-      }
-      ultimately show "supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) \<subseteq> supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
-        using Act\<^sub>\<alpha>.hyps by (meson DiffI finite_UnI finite_supp hereditarily_fs_implies_finite_supp rev_subsetD subsetCI supp_is_subset)
-    qed
-  finally show ?case .
-qed
-
-lemma supp_Act\<^sub>\<alpha> [simp]:
-  assumes "hereditarily_fs t\<^sub>\<alpha>"
-  shows "supp (Act\<^sub>\<alpha> \<alpha> t\<^sub>\<alpha>) = supp \<alpha> \<union> supp t\<^sub>\<alpha> - bn \<alpha>"
-by (metis (no_types, lifting) Act\<^sub>\<alpha> Act\<^sub>\<alpha>_def fv_tAct Tree\<^sub>\<alpha>_rep_abs alpha_Tree_fv_Tree assms fv_Tree_rep_Tree\<^sub>\<alpha>_eq_supp id_apply map_fun_apply)
-
-lemma supp_Act [simp]: "supp (Act \<alpha> x) = supp \<alpha> \<union> supp x - bn \<alpha>"
-by (metis Act.rep_eq Rep_formula' supp_Act\<^sub>\<alpha> supp_Rep_formula)
 
 lemma formula_strong_induct_aux:
   fixes x
