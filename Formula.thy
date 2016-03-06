@@ -173,7 +173,7 @@ lemma alpha_set_cong [fundef_cong]:
 by (simp add: alpha_set)
 
 quotient_type
-  ('idx,'pred,'act) Tree\<^sub>p = "('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree" / "hull_relp"
+  ('idx,'pred,'act) Tree\<^sub>p = "('idx,'pred::pt,'act::bn) Tree" / "hull_relp"
   by (fact hull_relp_equivp)
 
 lemma abs_Tree\<^sub>p_eq [simp]: "abs_Tree\<^sub>p (p \<bullet> t) = abs_Tree\<^sub>p t"
@@ -183,7 +183,7 @@ lemma permute_rep_abs_Tree\<^sub>p:
   obtains p where "rep_Tree\<^sub>p (abs_Tree\<^sub>p t) = p \<bullet> t"
 by (metis Quotient3_Tree\<^sub>p Tree\<^sub>p.abs_eq_iff rep_abs_rsp hull_relp.simps)
 
-lift_definition Tree_wf\<^sub>p :: "('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree\<^sub>p rel" is
+lift_definition Tree_wf\<^sub>p :: "('idx,'pred::pt,'act::bn) Tree\<^sub>p rel" is
   Tree_wf .
 
 lemma Tree_wf\<^sub>pI [simp]:
@@ -225,13 +225,13 @@ next
   qed
 qed
 
-fun alpha_Tree_termination :: "('a, 'b, 'c) Tree \<times> ('a, 'b, 'c) Tree \<Rightarrow> ('a, 'b\<Colon>pt, 'c\<Colon>bn) Tree\<^sub>p set" where
+fun alpha_Tree_termination :: "('a, 'b, 'c) Tree \<times> ('a, 'b, 'c) Tree \<Rightarrow> ('a, 'b::pt, 'c::bn) Tree\<^sub>p set" where
   "alpha_Tree_termination (t1, t2) = {abs_Tree\<^sub>p t1, abs_Tree\<^sub>p t2}"
 
 text \<open>Here it comes \ldots\<close>
 
 function (sequential)
-  alpha_Tree :: "('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree \<Rightarrow> ('idx,'pred,'act) Tree \<Rightarrow> bool" (infix "=\<^sub>\<alpha>" 50) where
+  alpha_Tree :: "('idx,'pred::pt,'act::bn) Tree \<Rightarrow> ('idx,'pred,'act) Tree \<Rightarrow> bool" (infix "=\<^sub>\<alpha>" 50) where
 -- \<open>@{const alpha_Tree}\<close>
   alpha_tConj: "tConj tset1 =\<^sub>\<alpha> tConj tset2 \<longleftrightarrow> rel_bset alpha_Tree tset1 tset2"
 | alpha_tNot: "tNot t1 =\<^sub>\<alpha> tNot t2 \<longleftrightarrow> t1 =\<^sub>\<alpha> t2"
@@ -732,7 +732,7 @@ text \<open>We define the type of (infinitely branching) trees quotiented by $\a
 
 (* FIXME: No map function defined. No relator found. *)
 quotient_type
-  ('idx,'pred,'act) Tree\<^sub>\<alpha> = "('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree" / "alpha_Tree"
+  ('idx,'pred,'act) Tree\<^sub>\<alpha> = "('idx,'pred::pt,'act::bn) Tree" / "alpha_Tree"
   by (fact alpha_Tree_equivp)
 
 lemma Tree\<^sub>\<alpha>_abs_rep [simp]: "abs_Tree\<^sub>\<alpha> (rep_Tree\<^sub>\<alpha> t\<^sub>\<alpha>) = t\<^sub>\<alpha>"
@@ -776,7 +776,7 @@ subsection \<open>Constructors for trees modulo \texorpdfstring{$\alpha$}{alpha}
 
 text \<open>The constructors are lifted from trees.\<close>
 
-lift_definition Conj\<^sub>\<alpha> :: "('idx,'pred,'act) Tree\<^sub>\<alpha> set['idx] \<Rightarrow> ('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree\<^sub>\<alpha>" is
+lift_definition Conj\<^sub>\<alpha> :: "('idx,'pred,'act) Tree\<^sub>\<alpha> set['idx] \<Rightarrow> ('idx,'pred::pt,'act::bn) Tree\<^sub>\<alpha>" is
   tConj
 by simp
 
@@ -786,15 +786,15 @@ by (metis (full_types) Quotient_Tree\<^sub>\<alpha> Quotient_abs_rep bset_quot_m
 lemma Conj\<^sub>\<alpha>_def': "Conj\<^sub>\<alpha> tset\<^sub>\<alpha> = abs_Tree\<^sub>\<alpha> (tConj (map_bset rep_Tree\<^sub>\<alpha> tset\<^sub>\<alpha>))"
 by (metis Conj\<^sub>\<alpha>.abs_eq map_bset_abs_rep_Tree\<^sub>\<alpha>)
 
-lift_definition Not\<^sub>\<alpha> :: "('idx,'pred,'act) Tree\<^sub>\<alpha> \<Rightarrow> ('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree\<^sub>\<alpha>" is
+lift_definition Not\<^sub>\<alpha> :: "('idx,'pred,'act) Tree\<^sub>\<alpha> \<Rightarrow> ('idx,'pred::pt,'act::bn) Tree\<^sub>\<alpha>" is
   tNot
 by simp
 
-lift_definition Pred\<^sub>\<alpha> :: "'pred \<Rightarrow> ('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree\<^sub>\<alpha>" is
+lift_definition Pred\<^sub>\<alpha> :: "'pred \<Rightarrow> ('idx,'pred::pt,'act::bn) Tree\<^sub>\<alpha>" is
   tPred
 .
 
-lift_definition Act\<^sub>\<alpha> :: "'act \<Rightarrow> ('idx,'pred,'act) Tree\<^sub>\<alpha> \<Rightarrow> ('idx,'pred\<Colon>pt,'act\<Colon>bn) Tree\<^sub>\<alpha>" is
+lift_definition Act\<^sub>\<alpha> :: "'act \<Rightarrow> ('idx,'pred,'act) Tree\<^sub>\<alpha> \<Rightarrow> ('idx,'pred::pt,'act::bn) Tree\<^sub>\<alpha>" is
   tAct
 by (fact alpha_Tree_tAct)
 
@@ -969,7 +969,7 @@ formulas.
 Instead, we define \emph{hereditarily} finitely supported trees. We require that environments and
 state predicates are finitely supported.\<close>
 
-inductive hereditarily_fs :: "('idx,'pred\<Colon>fs,'act\<Colon>bn) Tree\<^sub>\<alpha> \<Rightarrow> bool" where
+inductive hereditarily_fs :: "('idx,'pred::fs,'act::bn) Tree\<^sub>\<alpha> \<Rightarrow> bool" where
   Conj\<^sub>\<alpha>: "finite (supp tset\<^sub>\<alpha>) \<Longrightarrow> (\<And>t\<^sub>\<alpha>. t\<^sub>\<alpha> \<in> set_bset tset\<^sub>\<alpha> \<Longrightarrow> hereditarily_fs t\<^sub>\<alpha>) \<Longrightarrow> hereditarily_fs (Conj\<^sub>\<alpha> tset\<^sub>\<alpha>)"
 | Not\<^sub>\<alpha>: "hereditarily_fs t\<^sub>\<alpha> \<Longrightarrow> hereditarily_fs (Not\<^sub>\<alpha> t\<^sub>\<alpha>)"
 | Pred\<^sub>\<alpha>: "hereditarily_fs (Pred\<^sub>\<alpha> \<phi>)"
@@ -1117,7 +1117,7 @@ applied to a (potentially infinite) set of (hereditarily) finitely supported tre
 Isabelle's {\bf lift\_definition} to define~@{term Conj}. Instead, theorems about terms of the
 form~@{term "Conj xset"} will usually carry an assumption that~@{term xset} is finitely supported.\<close>
 
-definition Conj :: "('idx,'pred,'act) formula set['idx] \<Rightarrow> ('idx,'pred\<Colon>fs,'act\<Colon>bn) formula" where
+definition Conj :: "('idx,'pred,'act) formula set['idx] \<Rightarrow> ('idx,'pred::fs,'act::bn) formula" where
   "Conj xset = Abs_formula (Conj\<^sub>\<alpha> (map_bset Rep_formula xset))"
 
 lemma finite_supp_implies_hereditarily_fs_Conj\<^sub>\<alpha> [simp]:
@@ -1137,15 +1137,15 @@ lemma Conj_rep_eq:
   shows "Rep_formula (Conj xset) = Conj\<^sub>\<alpha> (map_bset Rep_formula xset)"
 using assms unfolding Conj_def by simp
 
-lift_definition Not :: "('idx,'pred,'act) formula \<Rightarrow> ('idx,'pred\<Colon>fs,'act\<Colon>bn) formula" is
+lift_definition Not :: "('idx,'pred,'act) formula \<Rightarrow> ('idx,'pred::fs,'act::bn) formula" is
   Not\<^sub>\<alpha>
 by (fact hereditarily_fs.Not\<^sub>\<alpha>)
 
-lift_definition Pred :: "'pred \<Rightarrow> ('idx,'pred\<Colon>fs,'act\<Colon>bn) formula" is
+lift_definition Pred :: "'pred \<Rightarrow> ('idx,'pred::fs,'act::bn) formula" is
   Pred\<^sub>\<alpha>
 by (fact hereditarily_fs.Pred\<^sub>\<alpha>)
 
-lift_definition Act :: "'act \<Rightarrow> ('idx,'pred,'act) formula \<Rightarrow> ('idx,'pred\<Colon>fs,'act\<Colon>bn) formula" is
+lift_definition Act :: "'act \<Rightarrow> ('idx,'pred,'act) formula \<Rightarrow> ('idx,'pred::fs,'act::bn) formula" is
   Act\<^sub>\<alpha>
 by (fact hereditarily_fs.Act\<^sub>\<alpha>)
 
@@ -1284,7 +1284,7 @@ lemma formula_strong_induct_aux:
     and "\<And>formula c. (\<And>c. P c formula) \<Longrightarrow> P c (Not formula)"
     and "\<And>pred c. P c (Pred pred)"
     and "\<And>act formula c. bn act \<sharp>* c \<Longrightarrow> (\<And>c. P c formula) \<Longrightarrow> P c (Act act formula)"
-  shows "\<And>(c :: 'd\<Colon>fs) p. P c (p \<bullet> x)"
+  shows "\<And>(c :: 'd::fs) p. P c (p \<bullet> x)"
 proof (induction x)
   case (Conj xset)
     moreover then have "finite (supp (p \<bullet> xset))"

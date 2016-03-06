@@ -15,8 +15,8 @@ using assms unfolding symp_def by (subst permute_fun_def)+ (simp add: permute_pu
 subsection \<open>Nominal transition systems\<close>
 
 locale nominal_ts =
-  fixes satisfies :: "'state\<Colon>fs \<Rightarrow> 'pred\<Colon>fs \<Rightarrow> bool"                 (infix "\<turnstile>" 70)
-    and transition :: "'state \<Rightarrow> ('act\<Colon>bn,'state) residual \<Rightarrow> bool"  (infix "\<rightarrow>" 70)
+  fixes satisfies :: "'state::fs \<Rightarrow> 'pred::fs \<Rightarrow> bool"                 (infix "\<turnstile>" 70)
+    and transition :: "'state \<Rightarrow> ('act::bn,'state) residual \<Rightarrow> bool"  (infix "\<rightarrow>" 70)
   assumes satisfies_eqvt [eqvt]: "P \<turnstile> \<phi> \<Longrightarrow> p \<bullet> P \<turnstile> p \<bullet> \<phi>"
       and transition_eqvt [eqvt]: "P \<rightarrow> \<alpha>Q \<Longrightarrow> p \<bullet> P \<rightarrow> p \<bullet> \<alpha>Q"
 begin

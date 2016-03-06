@@ -26,7 +26,7 @@ subsection \<open>Raw residuals and \texorpdfstring{$\alpha$}{alpha}-equivalence
 text \<open>Raw residuals are simply pairs of actions and states. Binding names in the action bind into
 (the action and) the state.\<close>
 
-fun alpha_residual :: "('act\<Colon>bn \<times> 'state\<Colon>pt) \<Rightarrow> ('act \<times> 'state) \<Rightarrow> bool" where
+fun alpha_residual :: "('act::bn \<times> 'state::pt) \<Rightarrow> ('act \<times> 'state) \<Rightarrow> bool" where
   "alpha_residual (\<alpha>1,P1) (\<alpha>2,P2) \<longleftrightarrow> [bn \<alpha>1]set. (\<alpha>1, P1) = [bn \<alpha>2]set. (\<alpha>2, P2)"
 
 text \<open>$\alpha$-equivalence is equivariant.\<close>
@@ -56,7 +56,7 @@ subsection \<open>Residuals\<close>
 text \<open>Residuals are raw residuals quotiented by $\alpha$-equivalence.\<close>
 
 quotient_type
-  ('act,'state) residual = "'act\<Colon>bn \<times> 'state\<Colon>pt" / "alpha_residual"
+  ('act,'state) residual = "'act::bn \<times> 'state::pt" / "alpha_residual"
   by (fact alpha_residual_equivp)
 
 lemma residual_abs_rep [simp]: "abs_residual (rep_residual res) = res"
@@ -98,7 +98,7 @@ by (metis residual.abs_eq_iff residual_abs_rep permute_residual.abs_eq)
 
 subsection \<open>Notation for pairs as residuals\<close>
 
-abbreviation abs_residual_pair :: "'act\<Colon>bn \<Rightarrow> 'state\<Colon>pt \<Rightarrow> ('act,'state) residual" ("\<langle>_,_\<rangle>" [0,0] 1000)
+abbreviation abs_residual_pair :: "'act::bn \<Rightarrow> 'state::pt \<Rightarrow> ('act,'state) residual" ("\<langle>_,_\<rangle>" [0,0] 1000)
 where
   "\<langle>\<alpha>,P\<rangle> == abs_residual (\<alpha>,P)"
 
@@ -110,24 +110,24 @@ subsection \<open>Support of residuals\<close>
 
 text \<open>We only consider finitely supported states now.\<close>
 
-lemma supp_abs_residual_pair: "supp \<langle>\<alpha>, P::'state\<Colon>fs\<rangle> = supp (\<alpha>,P) - bn \<alpha>"
+lemma supp_abs_residual_pair: "supp \<langle>\<alpha>, P::'state::fs\<rangle> = supp (\<alpha>,P) - bn \<alpha>"
 proof -
   have "supp \<langle>\<alpha>,P\<rangle> = supp ([bn \<alpha>]set. (\<alpha>, P))"
     by (simp add: supp_def residual.abs_eq_iff bn_eqvt)
   then show ?thesis by (simp add: supp_Abs)
 qed
 
-lemma bn_abs_residual_fresh [simp]: "bn \<alpha> \<sharp>* \<langle>\<alpha>,P::'state\<Colon>fs\<rangle>"
+lemma bn_abs_residual_fresh [simp]: "bn \<alpha> \<sharp>* \<langle>\<alpha>,P::'state::fs\<rangle>"
 by (simp add: fresh_star_def fresh_def supp_abs_residual_pair)
 
-lemma finite_supp_abs_residual_pair [simp]: "finite (supp \<langle>\<alpha>, P::'state\<Colon>fs\<rangle>)"
+lemma finite_supp_abs_residual_pair [simp]: "finite (supp \<langle>\<alpha>, P::'state::fs\<rangle>)"
 by (metis finite_Diff finite_supp supp_abs_residual_pair)
 
 
 subsection \<open>Strong induction\<close>
 
 lemma residual_strong_induct:
-  assumes "\<And>(act::'act\<Colon>bn) (state::'state\<Colon>fs) (c::'a\<Colon>fs). bn act \<sharp>* c \<Longrightarrow> P c \<langle>act,state\<rangle>"
+  assumes "\<And>(act::'act::bn) (state::'state::fs) (c::'a::fs). bn act \<sharp>* c \<Longrightarrow> P c \<langle>act,state\<rangle>"
   shows "P c residual"
 proof (rule residual.abs_induct, clarify)
   fix act :: 'act and state :: 'state
