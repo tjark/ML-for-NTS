@@ -148,4 +148,3 @@ proof (rule residual.abs_induct, clarify)
 qed
 
 end
-

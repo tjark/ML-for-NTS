@@ -699,7 +699,7 @@ next
       by (metis (mono_tags) finite_Collect_disjI)
     then have "x \<in> supp \<alpha> \<union> supp_rel (op =\<^sub>\<alpha>) t"
       by (simp add: supp_def supp_rel_def)
-    moreover 
+    moreover
     {
       assume **: "x \<in> bn \<alpha>"
       from "*" obtain b where b1: "\<not> (x \<rightleftharpoons> b) \<bullet> tAct \<alpha> t =\<^sub>\<alpha> tAct \<alpha> t" and b2: "b \<notin> supp \<alpha>" and b3: "b \<notin> supp_rel (op =\<^sub>\<alpha>) t"
@@ -1330,4 +1330,3 @@ lemmas formula_strong_induct = formula_strong_induct_aux[where p=0, simplified]
 declare formula_strong_induct [case_names Conj Not Pred Act]
 
 end
-

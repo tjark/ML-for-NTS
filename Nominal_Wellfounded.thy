@@ -97,4 +97,3 @@ lemma hull_rel_relcomp_trivialI [simp]:
 using assms by (metis hull_rel_relcompI permute_zero)
 
 end
-

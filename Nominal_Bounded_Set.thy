@@ -52,4 +52,3 @@ lemma map_bset_eqvt [eqvt]:
 by transfer simp
 
 end
-

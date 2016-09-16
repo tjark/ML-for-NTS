@@ -20,15 +20,15 @@ locale nominal_ts =
   assumes satisfies_eqvt [eqvt]: "P \<turnstile> \<phi> \<Longrightarrow> p \<bullet> P \<turnstile> p \<bullet> \<phi>"
       and transition_eqvt [eqvt]: "P \<rightarrow> \<alpha>Q \<Longrightarrow> p \<bullet> P \<rightarrow> p \<bullet> \<alpha>Q"
 begin
- 
+
   lemma transition_eqvt':
     assumes "P \<rightarrow> \<langle>\<alpha>,Q\<rangle>" shows "p \<bullet> P \<rightarrow> \<langle>p \<bullet> \<alpha>, p \<bullet> Q\<rangle>"
   using assms by (metis abs_residual_pair_eqvt transition_eqvt)
 
 end
- 
+
 subsection \<open>Bisimulations\<close>
- 
+
 context nominal_ts
 begin
 
