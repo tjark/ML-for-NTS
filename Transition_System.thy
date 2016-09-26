@@ -27,6 +27,7 @@ begin
 
 end
 
+
 subsection \<open>Bisimulations\<close>
 
 context nominal_ts
