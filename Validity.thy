@@ -348,7 +348,7 @@ begin
 
   lemma valid_Act_fresh:
     assumes "bn \<alpha> \<sharp>* P"
-    shows "valid P (Act \<alpha> x) \<longleftrightarrow> (\<exists>P'. P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<and> valid P' x)"
+    shows "P \<Turnstile> Act \<alpha> x \<longleftrightarrow> (\<exists>P'. P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<and> P' \<Turnstile> x)"
   proof
     assume "P \<Turnstile> Act \<alpha> x"
 
