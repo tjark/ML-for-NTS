@@ -316,29 +316,33 @@ begin
       by (metis Act.rep_eq valid.rep_eq valid_Tree\<^sub>\<alpha>_Act\<^sub>\<alpha>)
   qed
 
-  lemma valid_Act_strong: "P \<Turnstile> Act \<alpha> x \<longleftrightarrow> (\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* P)"
+  text \<open>The binding names in the alpha-variant that witnesses validity may be chosen fresh for any
+  finitely supported context.\<close>
+
+  lemma valid_Act_strong:
+    assumes "finite (supp X)"
+    shows "P \<Turnstile> Act \<alpha> x \<longleftrightarrow> (\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* X)"
   proof
     assume "P \<Turnstile> Act \<alpha> x"
     then obtain \<alpha>' x' P' where alpha: "Act \<alpha> x = Act \<alpha>' x'" and transition: "P \<rightarrow> \<langle>\<alpha>',P'\<rangle>" and valid: "P' \<Turnstile> x'"
       by (metis valid_Act)
     have "finite (bn \<alpha>')"
-      by (metis bn_finite)
-    moreover have "finite (supp P)"
-      by (metis finite_supp)
+      by (fact bn_finite)
+    moreover note `finite (supp X)`
     moreover have "finite (supp (Act \<alpha>' x', \<langle>\<alpha>',P'\<rangle>))"
       by (metis finite_Diff finite_UnI finite_supp supp_Pair supp_abs_residual_pair)
     moreover have "bn \<alpha>' \<sharp>* (Act \<alpha>' x', \<langle>\<alpha>',P'\<rangle>)"
       by (auto simp add: fresh_star_def fresh_def supp_Pair supp_abs_residual_pair)
-    ultimately obtain p where fresh_P: "(p \<bullet> bn \<alpha>') \<sharp>* P" and "supp (Act \<alpha>' x', \<langle>\<alpha>',P'\<rangle>) \<sharp>* p"
+    ultimately obtain p where fresh_X: "(p \<bullet> bn \<alpha>') \<sharp>* X" and "supp (Act \<alpha>' x', \<langle>\<alpha>',P'\<rangle>) \<sharp>* p"
       by (metis at_set_avoiding2)
     then have "supp (Act \<alpha>' x') \<sharp>* p" and "supp \<langle>\<alpha>',P'\<rangle> \<sharp>* p"
       by (metis fresh_star_Un supp_Pair)+
     then have "Act (p \<bullet> \<alpha>') (p \<bullet> x') = Act \<alpha>' x'" and "\<langle>p \<bullet> \<alpha>', p \<bullet> P'\<rangle> = \<langle>\<alpha>',P'\<rangle>"
       by (metis Act_eqvt supp_perm_eq, metis abs_residual_pair_eqvt supp_perm_eq)
-    then show "\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* P"
-      by (metis alpha bn_eqvt fresh_P transition valid valid_eqvt)
+    then show "\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* X"
+      by (metis alpha bn_eqvt fresh_X transition valid valid_eqvt)
   next
-    assume "\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* P"
+    assume "\<exists>\<alpha>' x' P'. Act \<alpha> x = Act \<alpha>' x' \<and> P \<rightarrow> \<langle>\<alpha>',P'\<rangle> \<and> P' \<Turnstile> x' \<and> bn \<alpha>' \<sharp>* X"
     then show "P \<Turnstile> Act \<alpha> x" by (metis valid_Act)
   qed
 
@@ -348,7 +352,9 @@ begin
   proof
     assume "P \<Turnstile> Act \<alpha> x"
 
-    then obtain \<alpha>' x' P' where
+    moreover have "finite (supp P)"
+      by (fact finite_supp)
+    ultimately obtain \<alpha>' x' P' where
       alpha: "Act \<alpha> x = Act \<alpha>' x'" and transition: "P \<rightarrow> \<langle>\<alpha>',P'\<rangle>" and valid: "P' \<Turnstile> x'" and fresh: "bn \<alpha>' \<sharp>* P"
       by (metis valid_Act_strong)
 
