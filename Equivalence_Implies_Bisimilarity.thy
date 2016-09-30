@@ -158,7 +158,7 @@ begin
             finally have card_image: "|f ` ?Q'| <o natLeq +c |UNIV :: 'idx set|" .
             let ?y = "Conj (Abs_bset (f ` ?Q')) :: ('idx, 'pred, 'act) formula"
             have "P \<Turnstile> Act \<alpha> ?y"
-              unfolding valid_Act proof (default+)
+              unfolding valid_Act proof (standard+)
                 show "P \<rightarrow> \<langle>\<alpha>,P'\<rangle>" by fact
               next
                 {
