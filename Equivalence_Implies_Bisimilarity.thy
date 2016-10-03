@@ -95,7 +95,7 @@ begin
       by (metis logically_equivalent_def sympI)
     moreover
     {
-      fix P Q \<phi> assume "P =\<cdot> Q" then have "P \<turnstile> \<phi> = Q \<turnstile> \<phi>"
+      fix P Q \<phi> assume "P =\<cdot> Q" then have "P \<turnstile> \<phi> \<longrightarrow> Q \<turnstile> \<phi>"
         by (metis logically_equivalent_def valid_Pred)
     }
     moreover
