@@ -12,6 +12,13 @@ session "ML-for-NTS" = Nominal2 +
     "Logical_Equivalence"
     "Bisimilarity_Implies_Equivalence"
     "Equivalence_Implies_Bisimilarity"
+    "FS_Set"
+    "FL_Transition_System"
+    "FL_Formula"
+    "FL_Validity"
+    "FL_Logical_Equivalence"
+    "FL_Bisimilarity_Implies_Equivalence"
+    "FL_Equivalence_Implies_Bisimilarity"
   document_files
     "root.bib"
     "root.tex"
