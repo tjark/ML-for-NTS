@@ -124,6 +124,67 @@ lemma finite_supp_abs_residual_pair [simp]: "finite (supp \<langle>\<alpha>, P::
 by (metis finite_Diff finite_supp supp_abs_residual_pair)
 
 
+subsection \<open>Equality between residuals\<close>
+
+lemma residual_eq_iff_perm: "\<langle>\<alpha>1,P1\<rangle> = \<langle>\<alpha>2,P2\<rangle> \<longleftrightarrow>
+  (\<exists>p. supp (\<alpha>1, P1) - bn \<alpha>1 = supp (\<alpha>2, P2) - bn \<alpha>2 \<and> (supp (\<alpha>1, P1) - bn \<alpha>1) \<sharp>* p \<and> p \<bullet> (\<alpha>1, P1) = (\<alpha>2, P2) \<and> p \<bullet> bn \<alpha>1 = bn \<alpha>2)"
+  (is "?l \<longleftrightarrow> ?r")
+proof
+  assume *: "?l"
+  then have "[bn \<alpha>1]set. (\<alpha>1, P1) = [bn \<alpha>2]set. (\<alpha>2, P2)"
+    by (simp add: residual.abs_eq_iff)
+  then obtain p where "(bn \<alpha>1, (\<alpha>1,P1)) \<approx>set (op=) supp p (bn \<alpha>2, (\<alpha>2,P2))"
+    using Abs_eq_iff(1) by blast
+  then show "?r"
+    by (metis (mono_tags, lifting) alpha_set.simps)
+next
+  assume *: "?r"
+  then obtain p where "(bn \<alpha>1, (\<alpha>1,P1)) \<approx>set (op=) supp p (bn \<alpha>2, (\<alpha>2,P2))"
+    using alpha_set.simps by blast
+  then have "[bn \<alpha>1]set. (\<alpha>1, P1) = [bn \<alpha>2]set. (\<alpha>2, P2)"
+    using Abs_eq_iff(1) by blast
+  then show "?l"
+    by (simp add: residual.abs_eq_iff)
+qed
+
+lemma residual_eq_iff_perm_renaming: "\<langle>\<alpha>1,P1\<rangle> = \<langle>\<alpha>2,P2\<rangle> \<longleftrightarrow>
+  (\<exists>p. supp (\<alpha>1, P1) - bn \<alpha>1 = supp (\<alpha>2, P2) - bn \<alpha>2 \<and> (supp (\<alpha>1, P1) - bn \<alpha>1) \<sharp>* p \<and> p \<bullet> (\<alpha>1, P1) = (\<alpha>2, P2) \<and> p \<bullet> bn \<alpha>1 = bn \<alpha>2 \<and> supp p \<subseteq> bn \<alpha>1 \<union> p \<bullet> bn \<alpha>1)"
+  (is "?l \<longleftrightarrow> ?r")
+proof
+  assume "?l"
+  then obtain p where p: "supp (\<alpha>1, P1) - bn \<alpha>1 = supp (\<alpha>2, P2) - bn \<alpha>2 \<and> (supp (\<alpha>1, P1) - bn \<alpha>1) \<sharp>* p \<and> p \<bullet> (\<alpha>1, P1) = (\<alpha>2, P2) \<and> p \<bullet> bn \<alpha>1 = bn \<alpha>2"
+    by (metis residual_eq_iff_perm)
+  moreover obtain q where q_p: "\<forall>b\<in>bn \<alpha>1. q \<bullet> b = p \<bullet> b" and supp_q: "supp q \<subseteq> bn \<alpha>1 \<union> p \<bullet> bn \<alpha>1"
+    by (metis set_renaming_perm2)
+  have "supp q \<subseteq> supp p"
+  proof
+    fix a assume *: "a \<in> supp q" then show "a \<in> supp p"
+    proof (cases "a \<in> bn \<alpha>1")
+      case True then show ?thesis
+        using "*" q_p by (metis mem_Collect_eq supp_perm)
+    next
+      case False then have "a \<in> p \<bullet> bn \<alpha>1"
+        using "*" supp_q using UnE subsetCE by blast
+      with False have "p \<bullet> a \<noteq> a"
+        by (metis mem_permute_iff)
+      then show ?thesis
+        using fresh_def fresh_perm by blast
+    qed
+  qed
+  with p have "(supp (\<alpha>1, P1) - bn \<alpha>1) \<sharp>* q"
+    by (meson fresh_def fresh_star_def subset_iff)
+  moreover with p and q_p have "\<And>a. a \<in> supp \<alpha>1 \<Longrightarrow> q \<bullet> a = p \<bullet> a" and "\<And>a. a \<in> supp P1 \<Longrightarrow> q \<bullet> a = p \<bullet> a"
+    by (metis Diff_iff fresh_perm fresh_star_def UnCI supp_Pair)+
+  then have "q \<bullet> \<alpha>1 = p \<bullet> \<alpha>1" and "q \<bullet> P1 = p \<bullet> P1"
+    by (metis supp_perm_perm_eq)+
+  ultimately show "?r"
+    using supp_q by (metis Pair_eqvt bn_eqvt)
+next
+  assume "?r" then show "?l"
+    by (meson residual_eq_iff_perm)
+qed
+
+
 subsection \<open>Strong induction\<close>
 
 lemma residual_strong_induct:
@@ -145,6 +206,25 @@ proof (rule residual.abs_induct, clarify)
     using supp_perm_eq by fastforce
   then show "P c \<langle>act,state\<rangle>"
     using assms 1 by (metis bn_eqvt)
+qed
+
+
+subsection \<open>Other lemmas\<close>
+
+lemma residual_empty_bn_eq_iff:
+  assumes "bn \<alpha>1 = {}"
+  shows "\<langle>\<alpha>1,P1\<rangle> = \<langle>\<alpha>2,P2\<rangle> \<longleftrightarrow> \<alpha>1 = \<alpha>2 \<and> P1 = P2"
+proof
+  assume "\<langle>\<alpha>1,P1\<rangle> = \<langle>\<alpha>2,P2\<rangle>"
+  with assms have "[{}]set. (\<alpha>1, P1) = [bn \<alpha>2]set. (\<alpha>2, P2)"
+    by (simp add: residual.abs_eq_iff)
+  then obtain p where "({}, (\<alpha>1, P1)) \<approx>set (op=) supp p (bn \<alpha>2, (\<alpha>2, P2))"
+    using Abs_eq_iff(1) by blast
+  then show "\<alpha>1 = \<alpha>2 \<and> P1 = P2"
+    unfolding alpha_set.simps using supp_perm_eq by fastforce
+next
+  assume "\<alpha>1 = \<alpha>2 \<and> P1 = P2" then show "\<langle>\<alpha>1,P1\<rangle> = \<langle>\<alpha>2,P2\<rangle>"
+    by simp
 qed
 
 end

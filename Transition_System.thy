@@ -42,9 +42,9 @@ begin
   definition bisimilar :: "'state \<Rightarrow> 'state \<Rightarrow> bool"  (infix "\<sim>\<cdot>" 100) where
     "P \<sim>\<cdot> Q \<equiv> \<exists>R. is_bisimulation R \<and> R P Q"
 
-  text \<open>Proposition 1: @{const bisimilar} is an equivariant equivalence relation.\<close>
+  text \<open>@{const bisimilar} is an equivariant equivalence relation.\<close>
 
-  lemma is_bisimulation_eqvt [eqvt]:
+  lemma is_bisimulation_eqvt (*[eqvt]*):
     assumes "is_bisimulation R" shows "is_bisimulation (p \<bullet> R)"
   using assms unfolding is_bisimulation_def
   proof (clarify)
@@ -84,7 +84,7 @@ begin
     ultimately show "?S \<and> ?T \<and> ?U" by simp
   qed
 
-  lemma bisimilar_eqvt [eqvt]:
+  lemma bisimilar_eqvt (*[eqvt]*):
     assumes "P \<sim>\<cdot> Q" shows "(p \<bullet> P) \<sim>\<cdot> (p \<bullet> Q)"
   proof -
     from assms obtain R where *: "is_bisimulation R \<and> R P Q"

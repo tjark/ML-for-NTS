@@ -80,13 +80,13 @@ begin
     moreover have "\<forall>P Q. (p \<bullet> R) F P Q \<longrightarrow> (\<forall>f. f \<in>\<^sub>f\<^sub>s F \<longrightarrow> (\<forall>\<phi>. \<langle>f\<rangle>P \<turnstile> \<phi> \<longrightarrow> \<langle>f\<rangle>Q \<turnstile> \<phi>))" (is ?T)
       proof (clarify)
         fix P Q f \<phi>
-        assume *: "(p \<bullet> R) F P Q" and **: "f \<in>\<^sub>f\<^sub>s F" and ***: "\<langle>f\<rangle>P \<turnstile> \<phi>"
-        from * have "R (-p \<bullet> F) (-p \<bullet> P) (-p \<bullet> Q)"
+        assume pR: "(p \<bullet> R) F P Q" and effect: "f \<in>\<^sub>f\<^sub>s F" and satisfies: "\<langle>f\<rangle>P \<turnstile> \<phi>"
+        from pR have "R (-p \<bullet> F) (-p \<bullet> P) (-p \<bullet> Q)"
           by (simp add: eqvt_lambda permute_bool_def unpermute_def)
         moreover have "(-p \<bullet> f) \<in>\<^sub>f\<^sub>s (-p \<bullet> F)"
-          using ** by simp
+          using effect by simp
         moreover have "\<langle>-p \<bullet> f\<rangle>(-p \<bullet> P) \<turnstile> -p \<bullet> \<phi>"
-          using *** by (metis effect_apply_eqvt' satisfies_eqvt)
+          using satisfies by (metis effect_apply_eqvt' satisfies_eqvt)
         ultimately have "\<langle>-p \<bullet> f\<rangle>(-p \<bullet> Q) \<turnstile> -p \<bullet> \<phi>"
           using assms unfolding is_L_bisimulation_def by auto
         then show "\<langle>f\<rangle>Q \<turnstile> \<phi>"
@@ -96,15 +96,15 @@ begin
                                 \<langle>f\<rangle>P \<rightarrow> \<langle>\<alpha>,P'\<rangle> \<longrightarrow> (\<exists>Q'. \<langle>f\<rangle>Q \<rightarrow> \<langle>\<alpha>,Q'\<rangle> \<and> (p \<bullet> R) (L (\<alpha>, F)) P' Q')))" (is ?U)
       proof (clarify)
         fix P Q f \<alpha> P'
-        assume *: "(p \<bullet> R) F P Q" and **: "f \<in>\<^sub>f\<^sub>s F" and ***: "bn \<alpha> \<sharp>* (\<langle>f\<rangle>Q, F)" and ****: "\<langle>f\<rangle>P \<rightarrow> \<langle>\<alpha>,P'\<rangle>"
-        from * have "R (-p \<bullet> F) (-p \<bullet> P) (-p \<bullet> Q)"
+        assume pR: "(p \<bullet> R) F P Q" and effect: "f \<in>\<^sub>f\<^sub>s F" and fresh: "bn \<alpha> \<sharp>* (\<langle>f\<rangle>Q, F)" and trans: "\<langle>f\<rangle>P \<rightarrow> \<langle>\<alpha>,P'\<rangle>"
+        from pR have "R (-p \<bullet> F) (-p \<bullet> P) (-p \<bullet> Q)"
           by (simp add: eqvt_lambda permute_bool_def unpermute_def)
         moreover have "(-p \<bullet> f) \<in>\<^sub>f\<^sub>s (-p \<bullet> F)"
-          using ** by simp
+          using effect by simp
         moreover have "bn (-p \<bullet> \<alpha>) \<sharp>* (\<langle>-p \<bullet> f\<rangle>(-p \<bullet> Q), -p \<bullet> F)"
-          using *** by (metis (full_types) effect_apply_eqvt' bn_eqvt fresh_star_Pair fresh_star_permute_iff)
+          using fresh by (metis (full_types) effect_apply_eqvt' bn_eqvt fresh_star_Pair fresh_star_permute_iff)
         moreover have "\<langle>-p \<bullet> f\<rangle>(-p \<bullet> P) \<rightarrow> \<langle>-p \<bullet> \<alpha>, -p \<bullet> P'\<rangle>"
-          using **** by (metis effect_apply_eqvt' transition_eqvt')
+          using trans by (metis effect_apply_eqvt' transition_eqvt')
         ultimately obtain Q' where T: "\<langle>-p \<bullet> f\<rangle>(-p \<bullet> Q) \<rightarrow> \<langle>-p \<bullet> \<alpha>,Q'\<rangle>" and R: "R (L (-p \<bullet> \<alpha>, -p \<bullet> F)) (-p \<bullet> P') Q'"
           using assms unfolding is_L_bisimulation_def by meson
         from T have "\<langle>f\<rangle>Q \<rightarrow> \<langle>\<alpha>, p \<bullet> Q'\<rangle>"
